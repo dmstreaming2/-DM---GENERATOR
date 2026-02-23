@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>[DM] - GENERADOR</title>
+<meta name="description" content="DM Streaming">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400,700">
+<meta name="theme-color" content="#0077b6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="[DM] - GENERADOR">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="[DM] - GENERADOR">
+
+<style type="text/css">
+/* ========================================
+   VARIABLES - PALETA AZUL/CELESTE
+   ======================================== */
+:root {
+    --dm-primary: #0077b6;
+    --dm-primary-dark: #005f92;
+    --dm-primary-light: #00b4d8;
+    --dm-glow: #90e0ef;
+    --dm-bg-dark: #0a1628;
+    --dm-bg-card: #112240;
+    --dm-border: #233554;
+    --dm-text: #ffffff;
+    --dm-input-bg: #1a3a5c;
+    --dm-success: #64ffda;
+}
+
+/* ========================================
+   RESET & BASE
+   ======================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 10px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: 'Lato', Helvetica Neue, Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--dm-text);
+    background: linear-gradient(135deg, var(--dm-bg-dark) 0%, #0d2137 50%, var(--dm-bg-card) 100%);
+    min-height: 100vh;
+}
+
+/* ========================================
+   NAVIGATION
+   ======================================== */
+.navigations {
+    display: flex;
+    background: linear-gradient(135deg, var(--dm-primary) 0%, var(--dm-primary-dark) 100%);
+    align-items: center;
+    justify-content: center;
+    height: 90px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 30px rgba(0, 119, 182, 0.5);
+    border-bottom: 2px solid var(--dm-primary-light);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.navigations font {
+    font-size: 28px;
+    font-weight: 700;
+    color: #fff !important;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 0 2px 20px rgba(0, 180, 216, 0.6);
+}
+
+/* ========================================
+   CONTAINER
+   ======================================== */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.row {
+    margin-left: -15px;
+    margin-right: -15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.col-md-6 {
+    position: relative;
+    min-height: 1px;
+    padding-left: 15px;
+    padding-right: 15px;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+@media (min-width: 992px) {
+    .col-md-6 {
+        float: left;
+        width: 50%;
+    }
+}
+
+/* ========================================
+   TABS NAVIGATION - NUEVO
+   ======================================== */
+.tabs-nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 14px 35px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dm-text);
+    background: var(--dm-bg-card);
+    border: 2px solid var(--dm-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efecto reluciente en tabs */
+.tab-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 180, 216, 0.4),
+        transparent
+    );
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+
+.tab-btn:hover::before {
+    left: 100%;
+}
+
+.tab-btn:hover {
+    border-color: var(--dm-primary-light);
+    box-shadow: 0 0 20px rgba(0, 180, 216, 0.4);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--dm-primary) 0%, var(--dm-primary-light) 100%);
+    border-color: var(--dm-glow);
+    box-shadow: 0 4px 25px rgba(0, 180, 216, 0.6);
+}
+
+/* ========================================
+   TAB CONTENT
+   ======================================== */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========================================
+   CARDS - EFECTO RELUCIENTE
+   ======================================== */
+.panel {
+    background: var(--dm-bg-card);
+    border: 2px solid var(--dm-border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 40px rgba(0, 119, 182, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(0, 180, 216, 0.3),
+        transparent
+    );
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+
+.panel:hover::before {
+    left: 100%;
+}
+
+.panel:hover {
+    border-color: var(--dm-primary-light);
+    box-shadow: 0 15px 50px rgba(0, 180, 216, 0.5);
+}
+
+.panel-heading {
+    background: linear-gradient(135deg, var(--dm-primary) 0%, var(--dm-primary-dark) 100%);
+    color: #fff;
+    padding: 18px 25px;
+    border-bottom: 2px solid var(--dm-primary-light);
+    border-radius: 10px 10px 0 0;
+}
+
+.panel-heading h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.panel-body {
+    padding: 25px;
+    background: rgba(17, 34, 64, 0.9);
+}
+
+/* ========================================
+   FORMS & INPUTS
+   ======================================== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: inline-block;
+    max-width: 100%;
+    margin-bottom: 8px;
+    color: var(--dm-primary-light);
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-control {
+    display: block;
+    width: 100%;
+    height: 50px;
+    padding: 12px 18px;
+    font-size: 15px;
+    line-height: 1.42857143;
+    color: #ffffff;
+    background-color: var(--dm-input-bg);
+    border: 2px solid var(--dm-border);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--dm-primary-light);
+    outline: 0;
+    box-shadow: 0 0 20px rgba(0, 180, 216, 0.4);
+    background: rgba(0, 180, 216, 0.1);
+}
+
+.form-control:hover {
+    border-color: var(--dm-primary);
+}
+
+.form-control::-webkit-input-placeholder { color: #8892b0; }
+.form-control::-moz-placeholder { color: #8892b0; }
+.form-control:-ms-input-placeholder { color: #8892b0; }
+
+textarea.form-control {
+    height: 350px;
+    resize: vertical;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+.btn {
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+    touch-action: manipulation;
+    cursor: pointer;
+    background-image: none;
+    border: 2px solid transparent;
+    white-space: nowrap;
+    padding: 14px 28px;
+    font-size: 15px;
+    line-height: 1.42857143;
+    border-radius: 8px;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+    );
+    transition: left 0.5s ease;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+.btn-primary {
+    color: #fff;
+    background: linear-gradient(135deg, var(--dm-primary) 0%, var(--dm-primary-light) 100%);
+    border-color: var(--dm-primary-dark);
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 20px rgba(0, 119, 182, 0.5);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--dm-primary-light) 0%, var(--dm-glow) 100%);
+    border-color: var(--dm-glow);
+    box-shadow: 0 8px 30px rgba(0, 180, 216, 0.7);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(0, 119, 182, 0.5);
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* Botones para otras funciones */
+.btn-function {
+    background: var(--dm-input-bg);
+    border: 2px solid var(--dm-primary);
+    color: var(--dm-text);
+    margin-bottom: 15px;
+    width: 100%;
+    text-align: left;
+    padding: 18px 25px;
+}
+
+.btn-function:hover {
+    background: var(--dm-primary);
+    border-color: var(--dm-primary-light);
+    transform: translateX(5px);
+}
+
+.btn-function i {
+    margin-right: 10px;
+    font-size: 18px;
+}
+
+/* ========================================
+   FOOTER
+   ======================================== */
+footer {
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 50px;
+    border-top: 2px solid var(--dm-border);
+    background: rgba(10, 22, 40, 0.8);
+}
+
+footer p {
+    margin: 0;
+    color: #8892b0;
+    font-size: 15px;
+}
+
+footer a {
+    color: var(--dm-primary-light);
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+footer a:hover {
+    color: var(--dm-glow);
+    text-shadow: 0 0 15px rgba(0, 180, 216, 0.6);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 991px) {
+    .col-md-6 {
+        width: 100%;
+        float: none;
+    }
+    
+    .container {
+        max-width: 100%;
+        padding: 0 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .navigations {
+        height: 70px;
+        margin-bottom: 20px;
+    }
+    
+    .navigations font {
+        font-size: 20px;
+        letter-spacing: 1px;
+    }
+    
+    .tabs-nav {
+        gap: 10px;
+    }
+    
+    .tab-btn {
+        padding: 12px 25px;
+        font-size: 13px;
+    }
+    
+    .panel-body {
+        padding: 20px 15px;
+    }
+    
+    .form-control {
+        height: 45px;
+        font-size: 14px;
+    }
+    
+    textarea.form-control {
+        height: 250px;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    footer {
+        padding: 30px 15px;
+        margin-top: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navigations font {
+        font-size: 16px;
+    }
+    
+    .panel-heading h3 {
+        font-size: 16px;
+    }
+    
+    label {
+        font-size: 13px;
+    }
+    
+    .tabs-nav {
+        flex-direction: column;
+    }
+    
+    .tab-btn {
+        width: 100%;
+    }
+}
+
+/* ========================================
+   SCROLLBAR & SELECTION
+   ======================================== */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dm-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--dm-primary), var(--dm-primary-light));
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--dm-primary-light), var(--dm-glow));
+}
+
+::selection {
+    background: var(--dm-primary-light);
+    color: var(--dm-bg-dark);
+}
+
+::-moz-selection {
+    background: var(--dm-primary-light);
+    color: var(--dm-bg-dark);
+}
+
+/* ========================================
+   UTILS
+   ======================================== */
+.text-center { text-align: center; }
+.hidden { display: none !important; }
+
+/* Info box para otras funciones */
+.info-box {
+    background: rgba(0, 119, 182, 0.1);
+    border: 1px solid var(--dm-primary);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.info-box h4 {
+    color: var(--dm-primary-light);
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.info-box p {
+    color: #8892b0;
+    font-size: 14px;
+    margin: 0;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Navigation -->
+    <nav class="navigations">
+        <font color="white" style="font-weight:bold;">💳 [DM] - GENERADOR</font>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        
+        <!-- Tabs Navigation -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="switchTab('generador')">
+                🔐 Generador
+            </button>
+            <button class="tab-btn" onclick="switchTab('otras-funciones')">
+                ⚙️ Otras Funciones
+            </button>
+        </div>
+
+        <!-- Tab 1: Generador (EXISTENTE) -->
+        <div id="tab-generador" class="tab-content active">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3>📝 Datos de Entrada</h3>
+                        </div>
+                        <div class="panel-body">
+                            <form-generator></form-generator>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3>💳 Resultados</h3>
+                        </div>
+                        <div class="panel-body">
+                            <generated-credit-cards></generated-credit-cards>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Otras Funciones (NUEVO) -->
+        <div id="tab-otras-funciones" class="tab-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3>🛠️ Herramientas Disponibles</h3>
+                        </div>
+                        <div class="panel-body">
+                            
+                            <div class="info-box">
+                                <h4>ℹ️ Información</h4>
+                                <p>Selecciona una función para comenzar. Más herramientas serán añadidas próximamente.</p>
+                            </div>
+
+                            <!-- Botón de función 1 -->
+                            <button class="btn btn-function" onclick="alert('Función: Validador de BIN - Próximamente')">
+                                <span>🔍</span> Validador de BIN
+                            </button>
+
+                            <!-- Botón de función 2 -->
+                            <button class="btn btn-function" onclick="alert('Función: Checker de CC - Próximamente')">
+                                <span>✅</span> Checker de CC
+                            </button>
+
+                            <!-- Botón de función 3 -->
+                            <button class="btn btn-function" onclick="alert('Función: Generador de Info - Próximamente')">
+                                <span>📋</span> Generador de Info
+                            </button>
+
+                            <!-- Botón de función 4 -->
+                            <button class="btn btn-function" onclick="alert('Función: Lookup de IP - Próximamente')">
+                                <span>🌐</span> Lookup de IP
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <h3>📊 Estado de Funciones</h3>
+                        </div>
+                        <div class="panel-body">
+                            
+                            <div class="form-group">
+                                <label>🔐 Generador de CC</label>
+                                <div style="background: rgba(100, 255, 218, 0.1); border: 1px solid #64ffda; padding: 12px; border-radius: 6px; color: #64ffda;">
+                                    ✅ Activo
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>🔍 Validador de BIN</label>
+                                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; padding: 12px; border-radius: 6px; color: #ffc107;">
+                                    ⏳ En Desarrollo
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>✅ Checker de CC</label>
+                                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; padding: 12px; border-radius: 6px; color: #ffc107;">
+                                    ⏳ En Desarrollo
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>📋 Generador de Info</label>
+                                <div style="background: rgba(255, 107, 107, 0.1); border: 1px solid #ff6b6b; padding: 12px; border-radius: 6px; color: #ff6b6b;">
+                                    🔜 Próximamente
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>🌐 Lookup de IP</label>
+                                <div style="background: rgba(255, 107, 107, 0.1); border: 1px solid #ff6b6b; padding: 12px; border-radius: 6px; color: #ff6b6b;">
+                                    🔜 Próximamente
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>DM Streaming / TG : <a href="https://t.me/dmstreaming2" target="_blank">@dmstreaming2</a></p>
+    </footer>
+</div>
+
+<!-- Logic Script (NO MODIFICAR) -->
+<script language="javascript" src="https://anon5ec.github.io/NAMSO-GEN-2020/gen-backend.js"></script>
+
+<!-- Tab Switching Script -->
+<script>
+function switchTab(tabName) {
+    // Ocultar todos los tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Desactivar todos los botones
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Mostrar el tab seleccionado
+    document.getElementById('tab-' + tabName).classList.add('active');
+    
+    // Activar el botón correspondiente
+    event.target.classList.add('active');
+}
+</script>
+
+</body>
+</html>
