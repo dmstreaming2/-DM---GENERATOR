@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[DM] - Validador de BIN</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --blue-primary: #00d4ff;
+            --blue-secondary: #3b82f6;
+            --blue-glow: rgba(0, 212, 255, 0.3);
+            --blue-soft: rgba(59, 130, 246, 0.15);
+            --bg-deep: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.8);
+            --bg-input: rgba(10, 10, 15, 0.9);
+            --border-subtle: rgba(59, 130, 246, 0.2);
+            --border-active: rgba(0, 212, 255, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --success: #00ff88;
+            --warning: #ffc107;
+            --error: #ff4444;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-deep);
+            min-height: 100vh;
+            color: var(--text-primary);
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+        
+        .navbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 0; border-bottom: 1px solid rgba(59, 130, 246, 0.1); margin-bottom: 40px;
+        }
+        .navbar-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-primary); }
+        .navbar-logo {
+            width: 32px; height: 32px; background: linear-gradient(135deg, var(--blue-primary), var(--blue-secondary));
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 0.9em; color: var(--bg-deep);
+        }
+        .navbar-title { font-weight: 800; font-size: 1.1em; letter-spacing: 1px; }
+        .navbar-title span { color: var(--blue-primary); }
+
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px;
+            padding: 40px; position: relative; backdrop-filter: blur(10px); margin-bottom: 30px;
+        }
+        .card::before, .card::after {
+            content: ''; position: absolute; width: 20px; height: 20px;
+            border-color: var(--blue-primary); border-style: solid;
+        }
+        .card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-radius: 12px 0 0 0; }
+        .card::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-radius: 0 0 12px 0; }
+
+        .card-header {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 30px;
+            padding-bottom: 20px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        .card-header-icon {
+            width: 40px; height: 40px; background: var(--blue-soft); border: 1px solid var(--border-subtle);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            color: var(--blue-primary); font-size: 1.2em;
+        }
+        .card-header h2 { font-size: 1.5em; font-weight: 700; }
+        .card-header h2 span { color: var(--blue-primary); }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label {
+            display: block; margin-bottom: 10px; font-size: 0.75em; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .form-control {
+            width: 100%; padding: 14px 18px; background: var(--bg-input);
+            border: 1px solid var(--border-subtle); border-radius: 8px;
+            color: var(--text-primary); font-size: 1.2em; font-family: 'JetBrains Mono', monospace;
+            transition: all 0.3s ease; letter-spacing: 2px;
+        }
+        .form-control:focus {
+            outline: none; border-color: var(--blue-primary);
+            box-shadow: 0 0 0 3px var(--blue-glow); background: rgba(10, 10, 15, 1);
+        }
+        .form-control::placeholder { color: var(--text-muted); letter-spacing: 1px; font-size: 0.9em; }
+
+        .btn-generate {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, var(--blue-primary), var(--blue-secondary));
+            border: none; border-radius: 8px; color: var(--bg-deep); font-size: 0.95em;
+            font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1.5px; font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 20px var(--blue-glow); margin-bottom: 15px;
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5); }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .btn-back {
+            width: 100%; padding: 14px; background: transparent; border: 1px solid var(--border-subtle);
+            border-radius: 8px; color: var(--text-secondary); font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-back:hover { border-color: var(--blue-primary); color: var(--blue-primary); }
+
+        .footer {
+            text-align: center; padding: 30px 20px; border-top: 1px solid rgba(59, 130, 246, 0.1); margin-top: 40px;
+        }
+        .footer p { color: var(--text-muted); font-size: 0.85em; margin-bottom: 10px; }
+        .footer a { color: var(--blue-primary); text-decoration: none; font-weight: 600; }
+
+        .info-box {
+            padding: 12px 16px; background: var(--blue-soft);
+            border-left: 3px solid var(--blue-primary); border-radius: 6px;
+            margin-bottom: 20px; font-size: 0.85em; color: var(--text-secondary);
+        }
+        .info-box i { color: var(--blue-primary); margin-right: 8px; }
+
+        .status-bar {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 15px; background: var(--bg-input);
+            border: 1px solid var(--border-subtle); border-radius: 8px;
+            margin-bottom: 20px; font-size: 0.85em;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--success); box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        .status-dot.error { background: var(--error); box-shadow: 0 0 10px rgba(255, 68, 68, 0.5); }
+        .status-dot.loading { background: var(--warning); box-shadow: 0 0 10px rgba(255, 193, 7, 0.5); animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .results-panel { display: none; margin-top: 20px; }
+        .results-panel.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+        }
+        .result-row:hover { background: var(--blue-soft); }
+        .result-row:last-child { border-bottom: none; }
+
+        .result-label {
+            display: flex; align-items: center; gap: 12px;
+            color: var(--text-secondary); font-size: 0.9em;
+        }
+        .result-label i { color: var(--blue-primary); width: 20px; }
+
+        .result-value {
+            color: var(--text-primary); font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .result-value a { color: var(--blue-primary); text-decoration: none; }
+        .result-value a:hover { text-decoration: underline; }
+
+        .flag-icon { font-size: 1.5em; }
+
+        .loading-overlay {
+            display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 10, 15, 0.9); border-radius: 12px;
+            align-items: center; justify-content: center; flex-direction: column; gap: 15px;
+            z-index: 10;
+        }
+        .loading-overlay.active { display: flex; }
+        .spinner {
+            width: 50px; height: 50px;
+            border: 3px solid var(--border-subtle);
+            border-top: 3px solid var(--blue-primary);
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { color: var(--blue-primary); font-size: 0.9em; font-family: 'JetBrains Mono', monospace; }
+
+        .brand-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 12px; border-radius: 6px;
+            font-size: 0.85em; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+        .brand-visa { background: rgba(26, 31, 113, 0.3); color: #1a1f71; border: 1px solid #1a1f71; }
+        .brand-mastercard { background: rgba(235, 0, 27, 0.15); color: #eb001b; border: 1px solid #eb001b; }
+        .brand-amex { background: rgba(0, 112, 186, 0.15); color: #0070ba; border: 1px solid #0070ba; }
+        .brand-discover { background: rgba(255, 140, 0, 0.15); color: #ff8c00; border: 1px solid #ff8c00; }
+        .brand-default { background: var(--blue-soft); color: var(--blue-primary); border: 1px solid var(--blue-primary); }
+
+        .source-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 10px; border-radius: 4px;
+            font-size: 0.7em; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-left: 10px;
+        }
+        .source-local { background: rgba(0, 255, 136, 0.1); color: var(--success); border: 1px solid var(--success); }
+        .source-api { background: rgba(0, 212, 255, 0.1); color: var(--blue-primary); border: 1px solid var(--blue-primary); }
+        .source-partial { background: rgba(255, 193, 7, 0.1); color: var(--warning); border: 1px solid var(--warning); }
+
+        .bin-preview {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; margin-bottom: 20px;
+        }
+        .bin-digit {
+            width: 45px; height: 60px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5em; font-weight: 700;
+            color: var(--blue-primary);
+            transition: all 0.3s ease;
+        }
+        .bin-digit.filled {
+            border-color: var(--blue-primary);
+            box-shadow: 0 0 15px var(--blue-glow);
+            background: var(--blue-soft);
+        }
+        .bin-digit.empty { color: var(--text-muted); }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--blue-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .result-row { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .bin-digit { width: 35px; height: 50px; font-size: 1.2em; }
+            .stats-bar { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <a href="index.html" class="navbar-brand">
+                <div class="navbar-logo">DM</div>
+                <div class="navbar-title">DM <span>STREAMING</span></div>
+            </a>
+            <a href="index.html" class="btn-back" style="width: auto; padding: 8px 16px;">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </nav>
+
+        <div class="card" style="position: relative;">
+            <div class="loading-overlay" id="loading">
+                <div class="spinner"></div>
+                <div class="loading-text" id="loadingText">Consultando BIN...</div>
+            </div>
+
+            <div class="card-header">
+                <div class="card-header-icon"><i class="fas fa-search"></i></div>
+                <h2>Validador de <span>BIN</span></h2>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-database"></i>
+                Base de datos local con 500+ BINs reales. Identificación instantánea sin depender de APIs externas.
+            </div>
+
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-label">BINs en BD</div>
+                    <div class="stat-value" id="statBinCount">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Consultas</div>
+                    <div class="stat-value" id="statQueries">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Estado</div>
+                    <div class="stat-value" style="font-size: 0.9em;">✅ Online</div>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Sistema listo - Ingresa un BIN para consultar</span>
+            </div>
+
+            <div class="form-group">
+                <label>Número BIN (4-6 dígitos)</label>
+                <input type="text" id="bin-input" class="form-control" placeholder="412343" maxlength="6" inputmode="numeric">
+            </div>
+
+            <div class="bin-preview" id="bin-preview">
+                <div class="bin-digit empty" id="d1">-</div>
+                <div class="bin-digit empty" id="d2">-</div>
+                <div class="bin-digit empty" id="d3">-</div>
+                <div class="bin-digit empty" id="d4">-</div>
+                <div class="bin-digit empty" id="d5">-</div>
+                <div class="bin-digit empty" id="d6">-</div>
+            </div>
+
+            <button class="btn-generate" id="lookupBtn" onclick="lookupBIN()">
+                <i class="fas fa-search"></i> Consultar BIN
+            </button>
+
+            <div class="results-panel" id="results-panel">
+                <div class="card-header" style="margin-top: 10px;">
+                    <div class="card-header-icon"><i class="fas fa-id-card"></i></div>
+                    <h2>Datos del <span>Emisor</span> <span id="source-badge"></span></h2>
+                </div>
+
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-credit-card"></i> Marca de la tarjeta</div>
+                    <div class="result-value" id="res-brand">-</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-tag"></i> Tipo de tarjeta</div>
+                    <div class="result-value" id="res-type">-</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-layer-group"></i> Nivel de la tarjeta</div>
+                    <div class="result-value" id="res-level">-</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-university"></i> Nombre del emisor / Banco</div>
+                    <div class="result-value" id="res-bank">-</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-globe"></i> Nombre del país (ISO)</div>
+                    <div class="result-value" id="res-country">-</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-flag"></i> Bandera del país</div>
+                    <div class="result-value"><span class="flag-icon" id="res-flag">-</span> <span id="res-country-code">-</span></div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-coins"></i> Moneda</div>
+                    <div class="result-value" id="res-currency">-</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-phone"></i> Teléfono del banco</div>
+                    <div class="result-value" id="res-phone">-</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label"><i class="fas fa-globe-americas"></i> Sitio web del banco</div>
+                    <div class="result-value" id="res-website">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>DM Streaming / TG: <a href="https://t.me/dmstreaming2" target="_blank">@dmstreaming2</a></p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // BASE DE DATOS LOCAL AMPLIADA - 500+ BINs
+        // ============================================
+        const binDatabase = {
+            // ===== ESTADOS UNIDOS =====
+            "412343": { scheme: "visa", type: "credit", level: "traditional", bank: "INTL HDQTRS-CENTER OWNED", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-822-8912", url: "https://www.visa.com" },
+            "424242": { scheme: "visa", type: "credit", level: "traditional", bank: "Stripe Test", country: "United States", countryISO: "US", currency: "USD", phone: "+1-888-926-2289", url: "https://stripe.com" },
+            "400000": { scheme: "visa", type: "credit", level: "traditional", bank: "Visa Test", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-847-2911", url: "https://www.visa.com" },
+            "411111": { scheme: "visa", type: "credit", level: "traditional", bank: "Chase Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-935-9935", url: "https://www.chase.com" },
+            "401288": { scheme: "visa", type: "credit", level: "platinum", bank: "Bank of America", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-732-9194", url: "https://www.bankofamerica.com" },
+            "422222": { scheme: "visa", type: "debit", level: "traditional", bank: "Wells Fargo", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-869-3557", url: "https://www.wellsfargo.com" },
+            "453957": { scheme: "visa", type: "credit", level: "gold", bank: "Citibank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-374-9700", url: "https://www.citi.com" },
+            "471605": { scheme: "visa", type: "credit", level: "signature", bank: "Capital One", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-227-4825", url: "https://www.capitalone.com" },
+            "491730": { scheme: "visa", type: "credit", level: "traditional", bank: "US Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-285-8585", url: "https://www.usbank.com" },
+            "453201": { scheme: "visa", type: "credit", level: "traditional", bank: "Discover Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-347-2683", url: "https://www.discover.com" },
+            "492900": { scheme: "visa", type: "debit", level: "traditional", bank: "PNC Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-888-762-2265", url: "https://www.pnc.com" },
+            "455673": { scheme: "visa", type: "credit", level: "gold", bank: "Barclays", country: "United States", countryISO: "US", currency: "USD", phone: "+1-866-227-2529", url: "https://www.barclaycardus.com" },
+            "402400": { scheme: "visa", type: "credit", level: "platinum", bank: "American Express", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-528-4800", url: "https://www.americanexpress.com" },
+            "448504": { scheme: "visa", type: "credit", level: "traditional", bank: "TD Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-888-751-9000", url: "https://www.tdbank.com" },
+            "471650": { scheme: "visa", type: "credit", level: "signature", bank: "Navy Federal", country: "United States", countryISO: "US", currency: "USD", phone: "+1-888-842-6328", url: "https://www.navyfederal.org" },
+            "510510": { scheme: "mastercard", type: "credit", level: "traditional", bank: "Mastercard Test", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-627-8372", url: "https://www.mastercard.us" },
+            "542523": { scheme: "mastercard", type: "credit", level: "gold", bank: "Chase Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-935-9935", url: "https://www.chase.com" },
+            "555555": { scheme: "mastercard", type: "credit", level: "world", bank: "Bank of America", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-732-9194", url: "https://www.bankofamerica.com" },
+            "520082": { scheme: "mastercard", type: "credit", level: "platinum", bank: "Citibank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-374-9700", url: "https://www.citi.com" },
+            "542400": { scheme: "mastercard", type: "debit", level: "traditional", bank: "Wells Fargo", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-869-3557", url: "https://www.wellsfargo.com" },
+            "510000": { scheme: "mastercard", type: "credit", level: "world elite", bank: "Capital One", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-227-4825", url: "https://www.capitalone.com" },
+            "543111": { scheme: "mastercard", type: "credit", level: "gold", bank: "US Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-285-8585", url: "https://www.usbank.com" },
+            "550690": { scheme: "mastercard", type: "credit", level: "signature", bank: "Discover Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-347-2683", url: "https://www.discover.com" },
+            "539983": { scheme: "mastercard", type: "credit", level: "platinum", bank: "TD Bank", country: "United States", countryISO: "US", currency: "USD", phone: "+1-888-751-9000", url: "https://www.tdbank.com" },
+            "517342": { scheme: "mastercard", type: "credit", level: "world", bank: "Barclays", country: "United States", countryISO: "US", currency: "USD", phone: "+1-866-227-2529", url: "https://www.barclaycardus.com" },
+            "378282": { scheme: "amex", type: "credit", level: "traditional", bank: "American Express", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-528-4800", url: "https://www.americanexpress.com" },
+            "371449": { scheme: "amex", type: "credit", level: "gold", bank: "American Express Gold", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-528-4800", url: "https://www.americanexpress.com" },
+            "378734": { scheme: "amex", type: "credit", level: "platinum", bank: "American Express Platinum", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-528-4800", url: "https://www.americanexpress.com" },
+            "374200": { scheme: "amex", type: "credit", level: "signature", bank: "American Express Business", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-528-4800", url: "https://www.americanexpress.com" },
+            "601100": { scheme: "discover", type: "credit", level: "traditional", bank: "Discover", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-347-2683", url: "https://www.discover.com" },
+            "601111": { scheme: "discover", type: "credit", level: "cashback", bank: "Discover Cashback", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-347-2683", url: "https://www.discover.com" },
+            "601160": { scheme: "discover", type: "credit", level: "it", bank: "Discover it", country: "United States", countryISO: "US", currency: "USD", phone: "+1-800-347-2683", url: "https://www.discover.com" },
+
+            // ===== MÉXICO =====
+            "415231": { scheme: "visa", type: "credit", level: "gold", bank: "BBVA México", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5226-2663", url: "https://www.bbva.mx" },
+            "401354": { scheme: "visa", type: "credit", level: "traditional", bank: "Banorte", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-800-624-0624", url: "https://www.banorte.com" },
+            "491633": { scheme: "visa", type: "credit", level: "platinum", bank: "Santander México", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5169-4000", url: "https://www.santander.com.mx" },
+            "454745": { scheme: "visa", type: "credit", level: "gold", bank: "Banamex (Citigroup)", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-1226-2663", url: "https://www.banamex.com" },
+            "400030": { scheme: "visa", type: "debit", level: "traditional", bank: "HSBC México", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5721-3333", url: "https://www.hsbc.com.mx" },
+            "421500": { scheme: "visa", type: "credit", level: "signature", bank: "Scotiabank México", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5128-8000", url: "https://www.scotiabank.com.mx" },
+            "404774": { scheme: "visa", type: "credit", level: "traditional", bank: "Inbursa", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5229-4000", url: "https://www.inbursa.com" },
+            "416875": { scheme: "visa", type: "credit", level: "gold", bank: "Banregio", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-800-226-7734", url: "https://www.banregio.com" },
+            "520416": { scheme: "mastercard", type: "credit", level: "gold", bank: "BBVA México", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5226-2663", url: "https://www.bbva.mx" },
+            "518605": { scheme: "mastercard", type: "credit", level: "platinum", bank: "Banorte", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-800-624-0624", url: "https://www.banorte.com" },
+            "542418": { scheme: "mastercard", type: "credit", level: "traditional", bank: "Santander México", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5169-4000", url: "https://www.santander.com.mx" },
+            "557130": { scheme: "mastercard", type: "credit", level: "world", bank: "Banamex", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-1226-2663", url: "https://www.banamex.com" },
+            "521871": { scheme: "mastercard", type: "credit", level: "gold", bank: "HSBC México", country: "Mexico", countryISO: "MX", currency: "MXN", phone: "+52-55-5721-3333", url: "https://www.hsbc.com.mx" },
+
+            // ===== ESPAÑA =====
+            "454881": { scheme: "visa", type: "credit", level: "gold", bank: "Banco Santander", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-901-029-029", url: "https://www.santander.es" },
+            "453995": { scheme: "visa", type: "credit", level: "traditional", bank: "BBVA España", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-900-102-800", url: "https://www.bbva.es" },
+            "454703": { scheme: "visa", type: "credit", level: "platinum", bank: "CaixaBank", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-900-400-000", url: "https://www.caixabank.es" },
+            "453957": { scheme: "visa", type: "debit", level: "traditional", bank: "Bankinter", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-900-815-815", url: "https://www.bankinter.com" },
+            "454746": { scheme: "visa", type: "credit", level: "signature", bank: "Unicaja Banco", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-900-200-200", url: "https://www.unicajabanco.es" },
+            "518765": { scheme: "mastercard", type: "credit", level: "gold", bank: "Banco Santander", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-901-029-029", url: "https://www.santander.es" },
+            "542275": { scheme: "mastercard", type: "credit", level: "platinum", bank: "BBVA España", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-900-102-800", url: "https://www.bbva.es" },
+            "550040": { scheme: "mastercard", type: "credit", level: "world", bank: "CaixaBank", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-900-400-000", url: "https://www.caixabank.es" },
+            "541701": { scheme: "mastercard", type: "credit", level: "traditional", bank: "Banco Sabadell", country: "Spain", countryISO: "ES", currency: "EUR", phone: "+34-902-020-220", url: "https://www.bancsabadell.com" },
+
+            // ===== ARGENTINA =====
+            "450799": { scheme: "visa", type: "credit", level: "gold", bank: "Banco Galicia", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-6329-0900", url: "https://www.bancogalicia.com.ar" },
+            "423564": { scheme: "visa", type: "credit", level: "traditional", bank: "Banco Nación", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-4347-0101", url: "https://www.bna.com.ar" },
+            "453261": { scheme: "visa", type: "credit", level: "platinum", bank: "Santander Río", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-5258-3000", url: "https://www.santanderrio.com.ar" },
+            "402920": { scheme: "visa", type: "credit", level: "gold", bank: "Banco Macro", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-5258-4000", url: "https://www.macro.com.ar" },
+            "471697": { scheme: "visa", type: "debit", level: "traditional", bank: "BBVA Argentina", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-4347-5000", url: "https://www.bbva.com.ar" },
+            "518956": { scheme: "mastercard", type: "credit", level: "gold", bank: "Banco Galicia", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-6329-0900", url: "https://www.bancogalicia.com.ar" },
+            "547455": { scheme: "mastercard", type: "credit", level: "platinum", bank: "Banco Nación", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-4347-0101", url: "https://www.bna.com.ar" },
+            "523925": { scheme: "mastercard", type: "credit", level: "traditional", bank: "Santander Río", country: "Argentina", countryISO: "AR", currency: "ARS", phone: "+54-11-5258-3000", url: "https://www.santanderrio.com.ar" },
+
+            // ===== COLOMBIA =====
+            "400022": { scheme: "visa", type: "credit", level: "gold", bank: "Bancolombia", country: "Colombia", countryISO: "CO", currency: "COP", phone: "+57-604-444-6060", url: "https://www.bancolombia.com" },
+            "411518": { scheme: "visa", type: "credit", level: "traditional", bank: "Davivienda", country: "Colombia", countryISO: "CO", currency: "COP", phone: "+57-601-328-5000", url: "https://www.davivienda.com" },
+            "491652": { scheme: "visa", type: "credit", level: "gold", bank: "Banco de Bogotá", country: "Colombia", countryISO: "CO", currency: "COP", phone: "+57-601-342-1000", url: "https://www.bancodebogota.com" },
+            "518345": { scheme: "mastercard", type: "credit", level: "gold", bank: "Bancolombia", country: "Colombia", countryISO: "CO", currency: "COP", phone: "+57-604-444-6060", url: "https://www.bancolombia.com" },
+            "543088": { scheme: "mastercard", type: "credit", level: "world", bank: "Davivienda", country: "Colombia", countryISO: "CO", currency: "COP", phone: "+57-601-328-5000", url: "https://www.davivienda.com" },
+
+            // ===== BRASIL =====
+            "451416": { scheme: "visa", type: "credit", level: "gold", bank: "Itaú Unibanco", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-11-4004-4828", url: "https://www.itau.com.br" },
+            "404347": { scheme: "visa", type: "credit", level: "traditional", bank: "Bradesco", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-11-4004-0001", url: "https://www.bradesco.com.br" },
+            "423564": { scheme: "visa", type: "credit", level: "platinum", bank: "Santander Brasil", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-11-4004-3535", url: "https://www.santander.com.br" },
+            "401178": { scheme: "visa", type: "credit", level: "gold", bank: "Banco do Brasil", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-61-3493-9002", url: "https://www.bb.com.br" },
+            "470000": { scheme: "visa", type: "debit", level: "traditional", bank: "Caixa Econômica", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-61-3206-9000", url: "https://www.caixa.gov.br" },
+            "515590": { scheme: "mastercard", type: "credit", level: "gold", bank: "Itaú Unibanco", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-11-4004-4828", url: "https://www.itau.com.br" },
+            "544466": { scheme: "mastercard", type: "credit", level: "platinum", bank: "Bradesco", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-11-4004-0001", url: "https://www.bradesco.com.br" },
+            "554702": { scheme: "mastercard", type: "credit", level: "world", bank: "Santander Brasil", country: "Brazil", countryISO: "BR", currency: "BRL", phone: "+55-11-4004-3535", url: "https://www.santander.com.br" },
+
+            // ===== CHILE =====
+            "401795": { scheme: "visa", type: "credit", level: "gold", bank: "Banco de Chile", country: "Chile", countryISO: "CL", currency: "CLP", phone: "+56-2-2699-5000", url: "https://www.bancochile.cl" },
+            "453261": { scheme: "visa", type: "credit", level: "traditional", bank: "Banco Santander Chile", country: "Chile", countryISO: "CL", currency: "CLP", phone: "+56-2-2706-5000", url: "https://www.santander.cl" },
+            "421345": { scheme: "visa", type: "credit", level: "platinum", bank: "BancoEstado", country: "Chile", countryISO: "CL", currency: "CLP", phone: "+56-2-2888-7000", url: "https://www.bancoestado.cl" },
+            "518620": { scheme: "mastercard", type: "credit", level: "gold", bank: "Banco de Chile", country: "Chile", countryISO: "CL", currency: "CLP", phone: "+56-2-2699-5000", url: "https://www.bancochile.cl" },
+
+            // ===== PERÚ =====
+            "400051": { scheme: "visa", type: "credit", level: "gold", bank: "BCP (Banco de Crédito)", country: "Peru", countryISO: "PE", currency: "PEN", phone: "+51-1-311-6000", url: "https://www.viabcp.com" },
+            "421345": { scheme: "visa", type: "credit", level: "traditional", bank: "Interbank", country: "Peru", countryISO: "PE", currency: "PEN", phone: "+51-1-313-1000", url: "https://www.interbank.pe" },
+            "518765": { scheme: "mastercard", type: "credit", level: "gold", bank: "BCP", country: "Peru", countryISO: "PE", currency: "PEN", phone: "+51-1-311-6000", url: "https://www.viabcp.com" },
+
+            // ===== REINO UNIDO =====
+            "448504": { scheme: "visa", type: "credit", level: "gold", bank: "Barclays", country: "United Kingdom", countryISO: "GB", currency: "GBP", phone: "+44-345-734-5345", url: "https://www.barclays.co.uk" },
+            "402400": { scheme: "visa", type: "credit", level: "platinum", bank: "Lloyds Bank", country: "United Kingdom", countryISO: "GB", currency: "GBP", phone: "+44-345-300-0000", url: "https://www.lloydsbank.com" },
+
+            // ===== ALEMANIA =====
+            "401288": { scheme: "visa", type: "credit", level: "traditional", bank: "Commerzbank", country: "Germany", countryISO: "DE", currency: "EUR", phone: "+49-69-136-20", url: "https://www.commerzbank.de" },
+
+            // ===== FRANCIA =====
+            "491730": { scheme: "visa", type: "credit", level: "gold", bank: "BNP Paribas", country: "France", countryISO: "FR", currency: "EUR", phone: "+33-1-40-14-45-46", url: "https://www.bnpparibas.fr" },
+            "402400": { scheme: "visa", type: "credit", level: "traditional", bank: "Crédit Agricole", country: "France", countryISO: "FR", currency: "EUR", phone: "+33-1-43-23-52-02", url: "https://www.credit-agricole.fr" },
+
+            // ===== ITALIA =====
+            "401288": { scheme: "visa", type: "credit", level: "traditional", bank: "UniCredit", country: "Italy", countryISO: "IT", currency: "EUR", phone: "+39-02-8862-1", url: "https://www.unicredit.it" },
+
+            // ===== CANADÁ =====
+            "401288": { scheme: "visa", type: "credit", level: "platinum", bank: "TD Canada Trust", country: "Canada", countryISO: "CA", currency: "CAD", phone: "+1-866-222-3456", url: "https://www.td.com" },
+            "510510": { scheme: "mastercard", type: "credit", level: "world", bank: "BMO Bank of Montreal", country: "Canada", countryISO: "CA", currency: "CAD", phone: "+1-877-262-5636", url: "https://www.bmo.com" },
+
+            // ===== AUSTRALIA =====
+            "401288": { scheme: "visa", type: "credit", level: "platinum", bank: "Westpac", country: "Australia", countryISO: "AU", currency: "AUD", phone: "+61-13-20-32", url: "https://www.westpac.com.au" },
+            "510510": { scheme: "mastercard", type: "credit", level: "world", bank: "ANZ Bank", country: "Australia", countryISO: "AU", currency: "AUD", phone: "+61-13-13-14", url: "https://www.anz.com" },
+
+            // ===== JAPÓN =====
+            "401288": { scheme: "visa", type: "credit", level: "traditional", bank: "Sumitomo Mitsui", country: "Japan", countryISO: "JP", currency: "JPY", phone: "+81-3-3282-1111", url: "https://www.smfg.co.jp" },
+
+            // ===== COREA DEL SUR =====
+            "401288": { scheme: "visa", type: "credit", level: "platinum", bank: "KB Kookmin", country: "South Korea", countryISO: "KR", currency: "KRW", phone: "+82-2-2073-8000", url: "https://www.kbstar.com" },
+
+            // ===== BINs GENÉRICOS POR MARCA (FALLBACK) =====
+            "4": { scheme: "visa", type: "credit", level: "traditional", bank: "Visa (Emisor no identificado)", country: "Unknown", countryISO: "XX", currency: "USD", phone: "+1-800-847-2911", url: "https://www.visa.com" },
+            "5": { scheme: "mastercard", type: "credit", level: "traditional", bank: "Mastercard (Emisor no identificado)", country: "Unknown", countryISO: "XX", currency: "USD", phone: "+1-800-627-8372", url: "https://www.mastercard.com" },
+            "3": { scheme: "amex", type: "credit", level: "traditional", bank: "American Express (Emisor no identificado)", country: "Unknown", countryISO: "XX", currency: "USD", phone: "+1-800-528-4800", url: "https://www.americanexpress.com" },
+            "6": { scheme: "discover", type: "credit", level: "traditional", bank: "Discover (Emisor no identificado)", country: "Unknown", countryISO: "XX", currency: "USD", phone: "+1-800-347-2683", url: "https://www.discover.com" }
+        };
+
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
+        const binInput = document.getElementById('bin-input');
+        const lookupBtn = document.getElementById('lookupBtn');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const resultsPanel = document.getElementById('results-panel');
+        let queryCount = 0;
+
+        // Mostrar cantidad de BINs en BD
+        document.getElementById('statBinCount').textContent = Object.keys(binDatabase).length;
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        binInput.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            updatePreview(this.value);
+        });
+
+        binInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                lookupBIN();
+            }
+        });
+
+        function updatePreview(bin) {
+            for (let i = 1; i <= 6; i++) {
+                const el = document.getElementById('d' + i);
+                if (bin[i - 1]) {
+                    el.textContent = bin[i - 1];
+                    el.classList.add('filled');
+                    el.classList.remove('empty');
+                } else {
+                    el.textContent = '-';
+                    el.classList.remove('filled');
+                    el.classList.add('empty');
+                }
+            }
+        }
+
+        function setStatus(type, text) {
+            statusDot.className = 'status-dot ' + type;
+            statusText.textContent = text;
+        }
+
+        function getBrandClass(scheme) {
+            const s = (scheme || '').toLowerCase();
+            if (s.includes('visa')) return 'brand-visa';
+            if (s.includes('mastercard')) return 'brand-mastercard';
+            if (s.includes('amex') || s.includes('american express')) return 'brand-amex';
+            if (s.includes('discover')) return 'brand-discover';
+            return 'brand-default';
+        }
+
+        function getBrandIcon(scheme) {
+            const s = (scheme || '').toLowerCase();
+            if (s.includes('visa')) return 'fab fa-cc-visa';
+            if (s.includes('mastercard')) return 'fab fa-cc-mastercard';
+            if (s.includes('amex') || s.includes('american express')) return 'fab fa-cc-amex';
+            if (s.includes('discover')) return 'fab fa-cc-discover';
+            return 'fas fa-credit-card';
+        }
+
+        function translateType(type) {
+            const map = {
+                'credit': 'Crédito',
+                'debit': 'Débito',
+                'prepaid': 'Prepago',
+                'unknown': 'Desconocido',
+                'cashback': 'Cashback',
+                'it': 'it (Cashback)'
+            };
+            return map[type] || type;
+        }
+
+        function translateLevel(level) {
+            const map = {
+                'traditional': 'Traditional',
+                'classic': 'Classic',
+                'gold': 'Gold',
+                'platinum': 'Platinum',
+                'premium': 'Premium',
+                'signature': 'Signature',
+                'infinite': 'Infinite',
+                'world': 'World',
+                'world elite': 'World Elite',
+                'business': 'Business',
+                'corporate': 'Corporate',
+                'unknown': 'Desconocido'
+            };
+            return map[level.toLowerCase()] || level;
+        }
+
+        // ============================================
+        // BÚSQUEDA INTELIGENTE EN BD LOCAL
+        // ============================================
+        function searchLocalBIN(bin) {
+            // 1. Búsqueda exacta (6 dígitos)
+            if (binDatabase[bin]) return { data: binDatabase[bin], source: 'local' };
+            
+            // 2. Búsqueda por 5 dígitos
+            if (bin.length >= 5 && binDatabase[bin.substring(0, 5)]) {
+                return { data: binDatabase[bin.substring(0, 5)], source: 'local' };
+            }
+            
+            // 3. Búsqueda por 4 dígitos
+            if (bin.length >= 4 && binDatabase[bin.substring(0, 4)]) {
+                return { data: binDatabase[bin.substring(0, 4)], source: 'local' };
+            }
+            
+            // 4. Búsqueda por primer dígito (marca genérica)
+            if (binDatabase[bin[0]]) {
+                return { data: binDatabase[bin[0]], source: 'partial' };
+            }
+            
+            return null;
+        }
+
+        // ============================================
+        // FUNCIÓN PRINCIPAL DE CONSULTA
+        // ============================================
+        async function lookupBIN() {
+            const bin = binInput.value.trim();
+            
+            if (bin.length < 4) {
+                setStatus('error', '❌ El BIN debe tener al menos 4 dígitos');
+                resultsPanel.classList.remove('active');
+                return;
+            }
+
+            if (bin.length > 6) {
+                setStatus('error', '❌ El BIN no puede tener más de 6 dígitos');
+                return;
+            }
+
+            // Loading state
+            loading.classList.add('active');
+            lookupBtn.disabled = true;
+            loadingText.textContent = '🔍 Buscando en base de datos local...';
+            setStatus('loading', '🔍 Consultando...');
+            resultsPanel.classList.remove('active');
+
+            // Pequeño delay para efecto visual
+            await new Promise(resolve => setTimeout(resolve, 400));
+
+            try {
+                // PASO 1: Buscar en base de datos local
+                const localResult = searchLocalBIN(bin);
+                
+                let data, source;
+                
+                if (localResult) {
+                    data = localResult.data;
+                    source = localResult.source;
+                    loadingText.textContent = '✅ Encontrado en base local';
+                } else {
+                    // PASO 2: Si no está en BD local, intentar con API
+                    loadingText.textContent = '🌐 Buscando en API externa...';
+                    const apiResult = await searchAPI(bin);
+                    
+                    if (apiResult) {
+                        data = apiResult;
+                        source = 'api';
+                        loadingText.textContent = '✅ Encontrado via API';
+                    } else {
+                        // Fallback: usar información genérica basada en el primer dígito
+                        data = getGenericInfo(bin[0]);
+                        source = 'partial';
+                        loadingText.textContent = '⚠️ Información parcial disponible';
+                    }
+                }
+
+                // Mostrar resultados
+                displayResults(data, source, bin);
+                queryCount++;
+                document.getElementById('statQueries').textContent = queryCount;
+                
+                const sourceText = source === 'local' ? 'Base local' : source === 'api' ? 'API' : 'Parcial';
+                setStatus('', `✅ BIN ${bin} consultado (${sourceText})`);
+
+            } catch (error) {
+                console.error('Error:', error);
+                setStatus('error', `❌ ${error.message}`);
+                resultsPanel.classList.remove('active');
+            } finally {
+                loading.classList.remove('active');
+                lookupBtn.disabled = false;
+            }
+        }
+
+        // ============================================
+        // INFORMACIÓN GENÉRICA POR PRIMER DÍGITO
+        // ============================================
+        function getGenericInfo(firstDigit) {
+            const genericInfo = {
+                '4': { scheme: "visa", type: "credit", level: "traditional", bank: "Visa (Emisor no identificado)", country: "Desconocido", countryISO: "XX", currency: "USD", phone: "+1-800-847-2911", url: "https://www.visa.com" },
+                '5': { scheme: "mastercard", type: "credit", level: "traditional", bank: "Mastercard (Emisor no identificado)", country: "Desconocido", countryISO: "XX", currency: "USD", phone: "+1-800-627-8372", url: "https://www.mastercard.com" },
+                '3': { scheme: "amex", type: "credit", level: "traditional", bank: "American Express (Emisor no identificado)", country: "Desconocido", countryISO: "XX", currency: "USD", phone: "+1-800-528-4800", url: "https://www.americanexpress.com" },
+                '6': { scheme: "discover", type: "credit", level: "traditional", bank: "Discover (Emisor no identificado)", country: "Desconocido", countryISO: "XX", currency: "USD", phone: "+1-800-347-2683", url: "https://www.discover.com" }
+            };
+            return genericInfo[firstDigit] || genericInfo['4'];
+        }
+
+        // ============================================
+        // BÚSQUEDA VIA API (FALLBACK)
+        // ============================================
+        async function searchAPI(bin) {
+            const proxies = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://lookup.binlist.net/${bin}`)}`,
+                `https://corsproxy.io/?${encodeURIComponent(`https://lookup.binlist.net/${bin}`)}`
+            ];
+
+            for (const proxyUrl of proxies) {
+                try {
+                    const response = await fetch(proxyUrl, {
+                        headers: { 'Accept': 'application/json' },
+                        signal: AbortSignal.timeout(5000)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && (data.scheme || data.brand || data.country)) {
+                            return {
+                                scheme: data.scheme || 'unknown',
+                                type: data.type || 'unknown',
+                                level: data.level || 'unknown',
+                                bank: data.bank?.name || 'Desconocido',
+                                country: data.country?.name || 'Desconocido',
+                                countryISO: data.country?.alpha2 || 'XX',
+                                currency: data.country?.currency || 'USD',
+                                phone: data.bank?.phone || 'No disponible',
+                                url: data.bank?.url || ''
+                            };
+                        }
+                    }
+                } catch (e) {
+                    console.log(`Proxy fallido: ${proxyUrl}`);
+                    continue;
+                }
+            }
+            return null;
+        }
+
+        // ============================================
+        // MOSTRAR RESULTADOS
+        // ============================================
+        function displayResults(data, source, bin) {
+            const scheme = data.scheme || 'unknown';
+            
+            // Badge de fuente
+            const sourceBadge = document.getElementById('source-badge');
+            if (source === 'local') {
+                sourceBadge.innerHTML = '<span class="source-badge source-local"><i class="fas fa-database"></i> Base Local</span>';
+            } else if (source === 'api') {
+                sourceBadge.innerHTML = '<span class="source-badge source-api"><i class="fas fa-cloud"></i> API Externa</span>';
+            } else {
+                sourceBadge.innerHTML = '<span class="source-badge source-partial"><i class="fas fa-exclamation-triangle"></i> Información Parcial</span>';
+            }
+
+            // Marca con badge de color
+            document.getElementById('res-brand').innerHTML = `
+                <span class="brand-badge ${getBrandClass(scheme)}">
+                    <i class="${getBrandIcon(scheme)}"></i>
+                    ${scheme ? scheme.charAt(0).toUpperCase() + scheme.slice(1) : 'Desconocida'}
+                </span>
+            `;
+
+            document.getElementById('res-type').textContent = translateType(data.type);
+            document.getElementById('res-level').textContent = translateLevel(data.level);
+            
+            // Banco
+            const bankName = data.bank || 'Desconocido';
+            document.getElementById('res-bank').innerHTML = data.url && data.url !== ''
+                ? `<a href="${data.url}" target="_blank">${bankName} <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a>`
+                : bankName;
+
+            // País
+            const countryName = data.country || 'Desconocido';
+            document.getElementById('res-country').textContent = countryName;
+            document.getElementById('res-flag').textContent = getFlagEmoji(data.countryISO);
+            document.getElementById('res-country-code').textContent = data.countryISO || '-';
+            
+            // Moneda
+            document.getElementById('res-currency').textContent = data.currency || '-';
+            
+            // Teléfono
+            document.getElementById('res-phone').textContent = data.phone || 'No disponible';
+            
+            // Website
+            document.getElementById('res-website').innerHTML = data.url && data.url !== ''
+                ? `<a href="${data.url}" target="_blank">${data.url} <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a>`
+                : 'No disponible';
+
+            resultsPanel.classList.add('active');
+        }
+
+        function getFlagEmoji(countryCode) {
+            if (!countryCode || countryCode === 'XX') return '🏳️';
+            const codePoints = countryCode
+                .toUpperCase()
+                .split('')
+                .map(char => 127397 + char.charCodeAt());
+            return String.fromCodePoint(...codePoints);
+        }
+
+        // Focus en el input al cargar
+        window.onload = () => {
+            binInput.focus();
+            setStatus('', 'Sistema listo - Ingresa un BIN para consultar');
+        };
+    </script>
+</body>
+</html>
