@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[DM] - Generador de Info</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --blue-primary: #00d4ff;
+            --blue-secondary: #3b82f6;
+            --blue-glow: rgba(0, 212, 255, 0.3);
+            --blue-soft: rgba(59, 130, 246, 0.15);
+            --bg-deep: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.8);
+            --bg-input: rgba(10, 10, 15, 0.9);
+            --border-subtle: rgba(59, 130, 246, 0.2);
+            --border-active: rgba(0, 212, 255, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-deep);
+            min-height: 100vh;
+            color: var(--text-primary);
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none; z-index: 0;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; position: relative; z-index: 1; }
+        
+        .navbar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 0; border-bottom: 1px solid rgba(59, 130, 246, 0.1); margin-bottom: 40px;
+        }
+        .navbar-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--text-primary); }
+        .navbar-logo {
+            width: 32px; height: 32px; background: linear-gradient(135deg, var(--blue-primary), var(--blue-secondary));
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 0.9em; color: var(--bg-deep);
+        }
+        .navbar-title { font-weight: 800; font-size: 1.1em; letter-spacing: 1px; }
+        .navbar-title span { color: var(--blue-primary); }
+
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 12px;
+            padding: 40px; position: relative; backdrop-filter: blur(10px); margin-bottom: 30px;
+        }
+        .card::before, .card::after {
+            content: ''; position: absolute; width: 20px; height: 20px;
+            border-color: var(--blue-primary); border-style: solid;
+        }
+        .card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; border-radius: 12px 0 0 0; }
+        .card::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-radius: 0 0 12px 0; }
+
+        .card-header {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 30px;
+            padding-bottom: 20px; border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+        }
+        .card-header-icon {
+            width: 40px; height: 40px; background: var(--blue-soft); border: 1px solid var(--border-subtle);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            color: var(--blue-primary); font-size: 1.2em;
+        }
+        .card-header h2 { font-size: 1.5em; font-weight: 700; }
+        .card-header h2 span { color: var(--blue-primary); }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label {
+            display: block; margin-bottom: 10px; font-size: 0.75em; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .form-control {
+            width: 100%; padding: 14px 18px; background: var(--bg-input);
+            border: 1px solid var(--border-subtle); border-radius: 8px;
+            color: var(--text-primary); font-size: 0.95em; font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus {
+            outline: none; border-color: var(--blue-primary);
+            box-shadow: 0 0 0 3px var(--blue-glow); background: rgba(10, 10, 15, 1);
+        }
+        .form-control option { background: var(--bg-deep); color: var(--text-primary); }
+
+        .btn-generate {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, var(--blue-primary), var(--blue-secondary));
+            border: none; border-radius: 8px; color: var(--bg-deep); font-size: 0.95em;
+            font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1.5px; font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 20px var(--blue-glow); margin-bottom: 15px;
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5); }
+        
+        .btn-back {
+            width: 100%; padding: 14px; background: transparent; border: 1px solid var(--border-subtle);
+            border-radius: 8px; color: var(--text-secondary); font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; font-family: 'Inter', sans-serif;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-back:hover { border-color: var(--blue-primary); color: var(--blue-primary); }
+
+        textarea.result {
+            width: 100%; min-height: 450px; padding: 18px; background: var(--bg-input);
+            border: 1px solid var(--border-subtle); border-radius: 8px;
+            color: var(--blue-primary); font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em; resize: vertical; transition: all 0.3s ease; line-height: 1.5;
+        }
+        textarea.result:focus { outline: none; border-color: var(--blue-primary); box-shadow: 0 0 0 3px var(--blue-glow); }
+
+        .footer {
+            text-align: center; padding: 30px 20px; border-top: 1px solid rgba(59, 130, 246, 0.1); margin-top: 40px;
+        }
+        .footer p { color: var(--text-muted); font-size: 0.85em; margin-bottom: 10px; }
+        .footer a { color: var(--blue-primary); text-decoration: none; font-weight: 600; transition: all 0.3s ease; }
+        .footer a:hover { text-shadow: 0 0 10px var(--blue-glow); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .info-box {
+            padding: 12px 16px;
+            background: var(--blue-soft);
+            border-left: 3px solid var(--blue-primary);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+        .info-box i { color: var(--blue-primary); margin-right: 8px; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 0.7em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--blue-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        @media (max-width: 768px) { .stats { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar">
+            <a href="index.html" class="navbar-brand">
+                <div class="navbar-logo">DM</div>
+                <div class="navbar-title">DM <span>STREAMING</span></div>
+            </a>
+            <a href="index.html" class="btn-back" style="width: auto; padding: 8px 16px;">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </nav>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-icon"><i class="fas fa-globe"></i></div>
+                <h2>Generador de <span>Información</span></h2>
+            </div>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                Sistema 100% independiente. Genera datos realistas localmente sin depender de servicios externos.
+            </div>
+
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Países</div>
+                    <div class="stat-value" id="statCountries">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Generados</div>
+                    <div class="stat-value" id="statGenerated">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Estado</div>
+                    <div class="stat-value" style="font-size: 0.9em;">✅ Online</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <div class="form-group">
+                        <label>País de Origen</label>
+                        <select id="info-country" class="form-control"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Género</label>
+                        <select id="info-gender" class="form-control">
+                            <option value="random">🎲 Aleatorio</option>
+                            <option value="male">♂️ Masculino</option>
+                            <option value="female">♀️ Femenino</option>
+                        </select>
+                    </div>
+                    <button class="btn-generate" id="generateBtn" onclick="generateFakeInfo()">
+                        <i class="fas fa-sync-alt"></i> Generar Identidad
+                    </button>
+                    <button class="btn-back" onclick="copyInfo()">
+                        <i class="fas fa-copy"></i> Copiar al Portapapeles
+                    </button>
+                </div>
+
+                <div>
+                    <div class="form-group">
+                        <label>Datos Generados</label>
+                        <textarea id="info-result" class="form-control result" readonly placeholder="Los datos aparecerán aquí..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>DM Streaming / TG: <a href="https://t.me/dmstreaming2" target="_blank">@dmstreaming2</a></p>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // BASE DE DATOS DE PAÍSES CON INFORMACIÓN REAL
+        // ============================================
+        const countriesDB = {
+            us: {
+                name: "Estados Unidos",
+                flag: "🇺🇸",
+                code: "US",
+                maleNames: ["James", "John", "Robert", "Michael", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Christopher", "Daniel", "Matthew", "Anthony", "Mark"],
+                femaleNames: ["Mary", "Patricia", "Jennifer", "Linda", "Elizabeth", "Barbara", "Susan", "Jessica", "Sarah", "Karen", "Lisa", "Nancy", "Betty", "Margaret", "Sandra"],
+                lastNames: ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin"],
+                streets: ["Oak Street", "Maple Avenue", "Washington Blvd", "Lakeview Drive", "Cedar Lane", "Pine Street", "Main Street", "Broadway", "Park Avenue", "Elm Street", "Sunset Boulevard", "Highland Avenue", "River Road", "Forest Drive", "Valley View"],
+                cities: ["Springfield", "Franklin", "Clinton", "Fairview", "Madison", "Georgetown", "Arlington", "Salem", "Bristol", "Manchester", "Greenville", "Burlington", "Oakland", "Riverside", "Lexington"],
+                states: ["CA", "NY", "TX", "FL", "IL", "PA", "OH", "GA", "NC", "MI", "NJ", "VA", "WA", "AZ", "MA", "TN", "IN", "MO", "MD", "WI"],
+                zipFormat: () => String(randInt(10000, 99999)),
+                phoneFormat: () => `(${randInt(200, 999)}) ${randInt(200, 999)}-${randInt(1000, 9999)}`,
+                idFormat: (g) => `${randInt(100, 899)}-${randInt(10, 99)}-${randInt(1000, 9999)}`,
+                idName: "SSN",
+                coords: () => ({ lat: (randInt(2500, 4900) / 100).toFixed(4), lng: (-randInt(7000, 12500) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "American Express", "Discover"]
+            },
+            mx: {
+                name: "México",
+                flag: "🇲🇽",
+                code: "MX",
+                maleNames: ["Santiago", "Mateo", "Sebastián", "Leonardo", "Matías", "Emiliano", "Diego", "Miguel", "Ángel", "Alejandro", "José", "Juan", "Luis", "Carlos", "Pedro"],
+                femaleNames: ["Mariana", "Valentina", "Regina", "Camila", "Sofía", "María José", "Ximena", "Isabella", "Fernanda", "Valeria", "Luciana", "Renata", "Victoria", "Guadalupe", "Ana"],
+                lastNames: ["Hernández", "García", "Martínez", "López", "González", "Rodríguez", "Pérez", "Sánchez", "Ramírez", "Flores", "Gómez", "Torres", "Díaz", "Vázquez", "Ruiz", "Morales", "Ortiz", "Silva", "Chávez", "Reyes"],
+                streets: ["Avenida Reforma", "Calle Juárez", "Paseo de la Reforma", "Avenida Insurgentes", "Calle Hidalgo", "Boulevard Kukulcán", "Avenida Universidad", "Calle Morelos", "Avenida Constitución", "Calle 5 de Mayo", "Avenida Revolución", "Calle Allende"],
+                cities: ["Ciudad de México", "Guadalajara", "Monterrey", "Puebla", "Tijuana", "León", "Juárez", "Zapopan", "Mérida", "San Luis Potosí", "Aguascalientes", "Hermosillo", "Saltillo", "Mexicali", "Culiacán"],
+                states: ["CDMX", "Jalisco", "Nuevo León", "Puebla", "Baja California", "Guanajuato", "Chihuahua", "Veracruz", "Oaxaca", "Yucatán", "Sonora", "Coahuila", "Querétaro", "Sinaloa", "Tabasco"],
+                zipFormat: () => String(randInt(10000, 99999)),
+                phoneFormat: () => `+52 ${randInt(10, 99)} ${randInt(1000, 9999)} ${randInt(1000, 9999)}`,
+                idFormat: () => generateCURP(),
+                idName: "CURP",
+                coords: () => ({ lat: (randInt(1400, 3200) / 100).toFixed(4), lng: (-randInt(8600, 11700) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "American Express"]
+            },
+            es: {
+                name: "España",
+                flag: "🇪🇸",
+                code: "ES",
+                maleNames: ["Alejandro", "Manuel", "David", "José", "Javier", "Daniel", "Antonio", "Francisco", "Pablo", "Álvaro", "Adrián", "Diego", "Mario", "Sergio", "Carlos"],
+                femaleNames: ["María", "Carmen", "Laura", "Ana", "Isabel", "Marta", "Lucía", "Paula", "Sara", "Elena", "Cristina", "Raquel", "Natalia", "Julia", "Alba"],
+                lastNames: ["García", "Rodríguez", "González", "Fernández", "López", "Martínez", "Sánchez", "Pérez", "Gómez", "Martín", "Jiménez", "Ruiz", "Hernández", "Díaz", "Moreno", "Álvarez", "Romero", "Alonso", "Gutiérrez", "Navarro"],
+                streets: ["Calle Mayor", "Avenida de la Constitución", "Calle de Alcalá", "Paseo de Gracia", "Calle Gran Vía", "Calle de Serrano", "Plaza de España", "Avenida Diagonal", "Calle de Preciados", "Rambla de Catalunya", "Calle Goya", "Avenida de América"],
+                cities: ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza", "Málaga", "Murcia", "Palma", "Bilbao", "Alicante", "Córdoba", "Valladolid", "Vigo", "Gijón", "Granada"],
+                states: ["Madrid", "Cataluña", "Andalucía", "Valencia", "Aragón", "País Vasco", "Galicia", "Castilla y León", "Castilla-La Mancha", "Canarias", "Murcia", "Baleares", "Extremadura", "Asturias", "Navarra"],
+                zipFormat: () => String(randInt(10000, 52999)),
+                phoneFormat: () => `+34 ${randInt(600, 699)} ${randInt(100, 999)} ${randInt(100, 999)}`,
+                idFormat: () => generateDNI(),
+                idName: "DNI",
+                coords: () => ({ lat: (randInt(3600, 4300) / 100).toFixed(4), lng: (-randInt(100, 900) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Maestro"]
+            },
+            ar: {
+                name: "Argentina",
+                flag: "🇦🇷",
+                code: "AR",
+                maleNames: ["Santiago", "Mateo", "Benjamín", "Thiago", "Lucas", "Matías", "Joaquín", "Nicolás", "Maximiliano", "Federico", "Martín", "Diego", "Sebastián", "Gonzalo", "Facundo"],
+                femaleNames: ["Valentina", "Martina", "Catalina", "Emma", "Sofía", "Isabella", "Camila", "Luciana", "Florencia", "Julieta", "Agustina", "Mía", "Delfina", "Morena", "Rocío"],
+                lastNames: ["González", "Rodríguez", "Gómez", "Fernández", "López", "Martínez", "Sánchez", "Pérez", "García", "Romero", "Díaz", "Álvarez", "Moreno", "Muñoz", "Alvarez", "Medina", "Castro", "Ortega", "Ruiz", "Flores"],
+                streets: ["Avenida Corrientes", "Calle Florida", "Avenida 9 de Julio", "Avenida Santa Fe", "Calle Lavalle", "Avenida Rivadavia", "Calle San Martín", "Avenida Libertador", "Calle Reconquista", "Avenida Callao", "Calle Tucumán", "Avenida Pueyrredón"],
+                cities: ["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "La Plata", "Tucumán", "Mar del Plata", "Salta", "Santa Fe", "San Juan", "Resistencia", "Neuquén", "Posadas", "Bahía Blanca", "Paraná"],
+                states: ["Buenos Aires", "Córdoba", "Santa Fe", "Mendoza", "Tucumán", "Entre Ríos", "Salta", "Chaco", "Corrientes", "Misiones", "San Juan", "Río Negro", "Neuquén", "Formosa", "Chubut"],
+                zipFormat: () => `C${randInt(1000, 9999)}`,
+                phoneFormat: () => `+54 ${randInt(11, 99)} ${randInt(1000, 9999)}-${randInt(1000, 9999)}`,
+                idFormat: () => `${randInt(10000000, 99999999)}`,
+                idName: "DNI",
+                coords: () => ({ lat: (-randInt(2200, 5500) / 100).toFixed(4), lng: (-randInt(5400, 7300) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Naranja", "Cabal"]
+            },
+            co: {
+                name: "Colombia",
+                flag: "🇨🇴",
+                code: "CO",
+                maleNames: ["Santiago", "Sebastián", "Mateo", "Nicolás", "Samuel", "Daniel", "Tomás", "Emiliano", "Miguel", "Alejandro", "Juan", "Carlos", "Andrés", "Felipe", "Jorge"],
+                femaleNames: ["Sofía", "Valentina", "Isabella", "Camila", "Mariana", "Valeria", "Luciana", "Daniela", "Catalina", "Gabriela", "Laura", "Paula", "Andrea", "Carolina", "Natalia"],
+                lastNames: ["Rodríguez", "Gómez", "Martínez", "Hernández", "López", "González", "Pérez", "Sánchez", "Ramírez", "Torres", "Flores", "Rivera", "Gómez", "Díaz", "Cruz", "Morales", "Ortiz", "Gutiérrez", "Chávez", "Reyes"],
+                streets: ["Carrera 7", "Calle 100", "Avenida El Dorado", "Carrera 15", "Calle 26", "Avenida Boyacá", "Carrera 11", "Calle 72", "Avenida Jiménez", "Carrera 30", "Calle 80", "Avenida Caracas"],
+                cities: ["Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena", "Cúcuta", "Bucaramanga", "Pereira", "Santa Marta", "Ibagué", "Pasto", "Manizales", "Neiva", "Villavicencio", "Armenia"],
+                states: ["Cundinamarca", "Antioquia", "Valle del Cauca", "Atlántico", "Bolívar", "Santander", "Risaralda", "Tolima", "Nariño", "Boyacá", "Caldas", "Huila", "Meta", "Cesar", "Magdalena"],
+                zipFormat: () => String(randInt(110001, 999999)),
+                phoneFormat: () => `+57 ${randInt(300, 399)} ${randInt(100, 999)} ${randInt(1000, 9999)}`,
+                idFormat: () => `${randInt(10000000, 99999999)}`,
+                idName: "Cédula",
+                coords: () => ({ lat: (randInt(-400, 1200) / 100).toFixed(4), lng: (-randInt(7200, 7900) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "American Express"]
+            },
+            cl: {
+                name: "Chile",
+                flag: "🇨🇱",
+                code: "CL",
+                maleNames: ["Santiago", "Sebastián", "Benjamín", "Matías", "Lucas", "Maximiliano", "Nicolás", "Vicente", "Joaquín", "Felipe", "Diego", "Alejandro", "Cristóbal", "Tomás", "Gabriel"],
+                femaleNames: ["Sofía", "Isidora", "Emma", "Martina", "Trinidad", "Antonia", "Catalina", "Florencia", "Renata", "Valentina", "Josefa", "María José", "Isabella", "Mía", "Javiera"],
+                lastNames: ["González", "Muñoz", "Rojas", "Castro", "Soto", "Silva", "Contreras", "Vargas", "Morales", "Sepúlveda", "Fuentes", "Alvarado", "Sandoval", "Espinoza", "Navarro", "Cortés", "Guzmán", "Vera", "Pinto", "Araya"],
+                streets: ["Avenida Providencia", "Calle Ahumada", "Avenida Libertador Bernardo O'Higgins", "Calle Merced", "Avenida Vicuña Mackenna", "Calle Estado", "Avenida Las Condes", "Calle San Martín", "Avenida Irarrázaval", "Calle Bandera"],
+                cities: ["Santiago", "Valparaíso", "Concepción", "La Serena", "Antofagasta", "Temuco", "Rancagua", "Talca", "Arica", "Chillán", "Iquique", "Puerto Montt", "Calama", "Osorno", "Valdivia"],
+                states: ["Región Metropolitana", "Valparaíso", "Biobío", "Coquimbo", "Antofagasta", "Araucanía", "O'Higgins", "Maule", "Arica y Parinacota", "Ñuble", "Tarapacá", "Los Lagos", "Atacama", "Los Ríos", "Aysén"],
+                zipFormat: () => String(randInt(1000000, 9999999)),
+                phoneFormat: () => `+56 9 ${randInt(1000, 9999)} ${randInt(1000, 9999)}`,
+                idFormat: () => generateRUT(),
+                idName: "RUT",
+                coords: () => ({ lat: (-randInt(1700, 5600) / 100).toFixed(4), lng: (-randInt(6700, 7600) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Magna", "Cabal"]
+            },
+            pe: {
+                name: "Perú",
+                flag: "🇵🇪",
+                code: "PE",
+                maleNames: ["Santiago", "Mateo", "Sebastián", "Benjamín", "Nicolás", "Joaquín", "Matías", "Lucas", "Diego", "Emiliano", "Miguel", "Ángel", "José", "Luis", "Carlos"],
+                femaleNames: ["Sofía", "Valentina", "Isabella", "Camila", "Mariana", "Luciana", "Valeria", "Renata", "Catalina", "Daniela", "María", "Ana", "Carmen", "Rosa", "Elena"],
+                lastNames: ["Quispe", "Huamán", "Mendoza", "Sánchez", "Flores", "Ramírez", "Torres", "Vargas", "Chávez", "Rojas", "Guzmán", "Vásquez", "Castillo", "Romero", "Herrera", "Medina", "Aguilar", "Peña", "Ortiz", "Ramos"],
+                streets: ["Avenida Arequipa", "Jirón de la Unión", "Avenida Javier Prado", "Calle San Martín", "Avenida Brasil", "Jirón Cusco", "Avenida Larco", "Calle Mercaderes", "Avenida Salaverry", "Jirón Carabaya"],
+                cities: ["Lima", "Arequipa", "Trujillo", "Chiclayo", "Piura", "Iquitos", "Cusco", "Huancayo", "Chimbote", "Tacna", "Juliaca", "Ica", "Sullana", "Ayacucho", "Cajamarca"],
+                states: ["Lima", "Arequipa", "La Libertad", "Lambayeque", "Piura", "Loreto", "Cusco", "Junín", "Áncash", "Tacna", "Puno", "Ica", "Tumbes", "Ayacucho", "Cajamarca"],
+                zipFormat: () => `LIMA ${randInt(1, 99)}`,
+                phoneFormat: () => `+51 ${randInt(900, 999)} ${randInt(100, 999)} ${randInt(100, 999)}`,
+                idFormat: () => `${randInt(10000000, 99999999)}`,
+                idName: "DNI",
+                coords: () => ({ lat: (-randInt(100, 1800) / 100).toFixed(4), lng: (-randInt(7000, 8100) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "American Express"]
+            },
+            br: {
+                name: "Brasil",
+                flag: "🇧🇷",
+                code: "BR",
+                maleNames: ["Miguel", "Arthur", "Gael", "Théo", "Heitor", "Davi", "Bernardo", "Samuel", "João", "Pedro", "Lucas", "Gabriel", "Matheus", "Rafael", "Guilherme"],
+                femaleNames: ["Helena", "Alice", "Laura", "Manuela", "Valentina", "Sophia", "Isabella", "Heloísa", "Luísa", "Júlia", "Beatriz", "Mariana", "Ana", "Camila", "Letícia"],
+                lastNames: ["Silva", "Santos", "Oliveira", "Souza", "Rodrigues", "Ferreira", "Alves", "Pereira", "Lima", "Gomes", "Costa", "Ribeiro", "Martins", "Carvalho", "Almeida", "Lopes", "Soares", "Fernandes", "Vieira", "Barbosa"],
+                streets: ["Avenida Paulista", "Rua Augusta", "Avenida Brasil", "Rua Oscar Freire", "Avenida Atlântica", "Rua Copacabana", "Avenida Rio Branco", "Rua da Consolação", "Avenida Faria Lima", "Rua Haddock Lobo"],
+                cities: ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador", "Fortaleza", "Belo Horizonte", "Manaus", "Curitiba", "Recife", "Porto Alegre", "Belém", "Goiânia", "Guarulhos", "Campinas", "São Luís"],
+                states: ["SP", "RJ", "MG", "BA", "PR", "RS", "PE", "CE", "PA", "SC", "GO", "MA", "ES", "PB", "AM", "MT", "DF", "MS", "RN", "AL"],
+                zipFormat: () => `${randInt(10000, 99999)}-${randInt(100, 999)}`,
+                phoneFormat: () => `+55 (${randInt(11, 99)}) 9${randInt(1000, 9999)}-${randInt(1000, 9999)}`,
+                idFormat: () => generateCPF(),
+                idName: "CPF",
+                coords: () => ({ lat: (-randInt(500, 3300) / 100).toFixed(4), lng: (-randInt(3500, 7400) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Elo", "Hipercard"]
+            },
+            gb: {
+                name: "Reino Unido",
+                flag: "🇬🇧",
+                code: "GB",
+                maleNames: ["Oliver", "George", "Harry", "Noah", "Jack", "Leo", "Arthur", "Muhammad", "Oscar", "Charlie", "Thomas", "James", "William", "Henry", "Edward"],
+                femaleNames: ["Olivia", "Amelia", "Isla", "Ava", "Mia", "Isabella", "Sophia", "Grace", "Lily", "Freya", "Ella", "Evie", "Charlotte", "Willow", "Poppy"],
+                lastNames: ["Smith", "Jones", "Taylor", "Brown", "Williams", "Wilson", "Johnson", "Davies", "Robinson", "Wright", "Thompson", "Evans", "Walker", "White", "Roberts", "Green", "Hall", "Wood", "Jackson", "Clarke"],
+                streets: ["High Street", "Church Lane", "Station Road", "Main Street", "Park Avenue", "Victoria Road", "King Street", "Queen Street", "London Road", "Manor Road", "Green Lane", "Mill Lane"],
+                cities: ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Liverpool", "Newcastle", "Sheffield", "Bristol", "Edinburgh", "Cardiff", "Belfast", "Nottingham", "Leicester", "Coventry"],
+                states: ["England", "Scotland", "Wales", "Northern Ireland"],
+                zipFormat: () => generateUKPostcode(),
+                phoneFormat: () => `+44 ${randInt(7000, 7999)} ${randInt(100000, 999999)}`,
+                idFormat: () => generateNINO(),
+                idName: "NINO",
+                coords: () => ({ lat: (randInt(5000, 5900) / 100).toFixed(4), lng: (-randInt(100, 600) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Maestro"]
+            },
+            fr: {
+                name: "Francia",
+                flag: "🇫🇷",
+                code: "FR",
+                maleNames: ["Gabriel", "Léo", "Raphaël", "Arthur", "Louis", "Lucas", "Adam", "Jules", "Hugo", "Maël", "Nathan", "Paul", "Sacha", "Tom", "Mathis"],
+                femaleNames: ["Jade", "Louise", "Emma", "Alice", "Chloé", "Lina", "Léa", "Manon", "Rose", "Anna", "Inès", "Lola", "Zoé", "Camille", "Sarah"],
+                lastNames: ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Richard", "Petit", "Durand", "Leroy", "Moreau", "Simon", "Laurent", "Lefebvre", "Michel", "Garcia", "David", "Bertrand", "Roux", "Vincent", "Fournier"],
+                streets: ["Rue de Rivoli", "Avenue des Champs-Élysées", "Boulevard Saint-Germain", "Rue du Faubourg Saint-Honoré", "Avenue Montaigne", "Rue de la Paix", "Boulevard Haussmann", "Rue de Rennes", "Avenue de l'Opéra", "Rue Lafayette"],
+                cities: ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille", "Rennes", "Reims", "Le Havre", "Saint-Étienne", "Toulon"],
+                states: ["Île-de-France", "Provence-Alpes-Côte d'Azur", "Auvergne-Rhône-Alpes", "Occitanie", "Nouvelle-Aquitaine", "Hauts-de-France", "Grand Est", "Pays de la Loire", "Bretagne", "Normandie"],
+                zipFormat: () => String(randInt(10000, 99999)),
+                phoneFormat: () => `+33 ${randInt(6, 7)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`,
+                idFormat: () => generateFrenchSSN(),
+                idName: "N° Sécurité Sociale",
+                coords: () => ({ lat: (randInt(4200, 5100) / 100).toFixed(4), lng: (-randInt(500, 800) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Carte Bleue"]
+            },
+            de: {
+                name: "Alemania",
+                flag: "🇩🇪",
+                code: "DE",
+                maleNames: ["Ben", "Paul", "Leon", "Finn", "Luis", "Jonas", "Noah", "Elias", "Felix", "Maximilian", "Alexander", "Moritz", "Jakob", "David", "Tim"],
+                femaleNames: ["Mia", "Emilia", "Hannah", "Emma", "Sofia", "Anna", "Lena", "Marie", "Lea", "Laura", "Lina", "Clara", "Johanna", "Ida", "Nele"],
+                lastNames: ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann", "Schäfer", "Koch", "Bauer", "Richter", "Klein", "Wolf", "Schröder", "Neumann", "Schwarz", "Zimmermann"],
+                streets: ["Hauptstraße", "Bahnhofstraße", "Gartenstraße", "Schulstraße", "Berliner Straße", "Mozartstraße", "Goethestraße", "Schillerstraße", "Friedrichstraße", "Kantstraße", "Lessingstraße", "Bismarckstraße"],
+                cities: ["Berlin", "Hamburg", "München", "Köln", "Frankfurt", "Stuttgart", "Düsseldorf", "Dortmund", "Essen", "Leipzig", "Bremen", "Dresden", "Hannover", "Nürnberg", "Duisburg"],
+                states: ["Bayern", "Nordrhein-Westfalen", "Baden-Württemberg", "Niedersachsen", "Hessen", "Sachsen", "Berlin", "Schleswig-Holstein", "Brandenburg", "Sachsen-Anhalt"],
+                zipFormat: () => String(randInt(10000, 99999)),
+                phoneFormat: () => `+49 ${randInt(150, 179)} ${randInt(1000000, 9999999)}`,
+                idFormat: () => `${randInt(100, 999)} ${randInt(10, 99)}.${randInt(10, 99)}.${String(randInt(1950, 2005))}`,
+                idName: "Personalausweis",
+                coords: () => ({ lat: (randInt(4700, 5500) / 100).toFixed(4), lng: (randInt(500, 1500) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Girocard"]
+            },
+            it: {
+                name: "Italia",
+                flag: "🇮🇹",
+                code: "IT",
+                maleNames: ["Leonardo", "Francesco", "Alessandro", "Lorenzo", "Mattia", "Andrea", "Gabriele", "Tommaso", "Riccardo", "Edoardo", "Giuseppe", "Giovanni", "Marco", "Luca", "Matteo"],
+                femaleNames: ["Sofia", "Giulia", "Aurora", "Alice", "Ginevra", "Emma", "Giorgia", "Greta", "Beatrice", "Anna", "Sara", "Martina", "Chiara", "Francesca", "Valentina"],
+                lastNames: ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano", "Colombo", "Ricci", "Marino", "Greco", "Bruno", "Gallo", "Conti", "De Luca", "Mancini", "Costa", "Giordano", "Rizzo", "Lombardi", "Moretti"],
+                streets: ["Via Roma", "Corso Vittorio Emanuele", "Via Garibaldi", "Piazza del Duomo", "Via Dante", "Corso Italia", "Via Mazzini", "Piazza San Marco", "Via Torino", "Corso Buenos Aires", "Via Nazionale", "Via del Corso"],
+                cities: ["Roma", "Milano", "Napoli", "Torino", "Palermo", "Genova", "Bologna", "Firenze", "Bari", "Catania", "Venezia", "Verona", "Messina", "Padova", "Trieste"],
+                states: ["Lombardia", "Lazio", "Campania", "Sicilia", "Veneto", "Emilia-Romagna", "Piemonte", "Puglia", "Toscana", "Calabria", "Sardegna", "Liguria", "Marche", "Abruzzo", "Friuli"],
+                zipFormat: () => String(randInt(10000, 99999)),
+                phoneFormat: () => `+39 ${randInt(300, 399)} ${randInt(100, 999)} ${randInt(1000, 9999)}`,
+                idFormat: () => generateItalianCF(),
+                idName: "Codice Fiscale",
+                coords: () => ({ lat: (randInt(3700, 4700) / 100).toFixed(4), lng: (randInt(600, 1800) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "Bancomat", "Postepay"]
+            },
+            ca: {
+                name: "Canadá",
+                flag: "🇨🇦",
+                code: "CA",
+                maleNames: ["Liam", "Noah", "William", "Oliver", "Ethan", "Lucas", "Mason", "Logan", "Alexander", "Benjamin", "James", "Jack", "Michael", "Daniel", "Matthew"],
+                femaleNames: ["Olivia", "Emma", "Charlotte", "Amelia", "Ava", "Sophia", "Isabella", "Mia", "Harper", "Evelyn", "Abigail", "Emily", "Elizabeth", "Sofia", "Avery"],
+                lastNames: ["Smith", "Brown", "Tremblay", "Martin", "Roy", "Wilson", "MacDonald", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Garcia", "Martinez", "Robinson", "Clark", "Rodriguez"],
+                streets: ["Main Street", "Queen Street", "King Street", "Yonge Street", "Rue Saint-Denis", "Boulevard Saint-Laurent", "Avenue du Parc", "Robson Street", "Granville Street", "Spadina Avenue", "Bloor Street", "Danforth Avenue"],
+                cities: ["Toronto", "Montreal", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Winnipeg", "Quebec City", "Hamilton", "Kitchener", "London", "Victoria", "Halifax", "Oshawa", "Windsor"],
+                states: ["ON", "QC", "BC", "AB", "MB", "SK", "NS", "NB", "NL", "PE", "NT", "YT", "NU"],
+                zipFormat: () => generateCanadianPostal(),
+                phoneFormat: () => `+1 (${randInt(200, 999)}) ${randInt(200, 999)}-${randInt(1000, 9999)}`,
+                idFormat: () => `${randInt(1000, 9999)}-${randInt(100, 999)}-${randInt(100, 999)}`,
+                idName: "SIN",
+                coords: () => ({ lat: (randInt(4200, 7000) / 100).toFixed(4), lng: (-randInt(5200, 14100) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "American Express", "Interac"]
+            },
+            au: {
+                name: "Australia",
+                flag: "🇦🇺",
+                code: "AU",
+                maleNames: ["Noah", "Oliver", "Jack", "William", "Leo", "Thomas", "Oscar", "Henry", "Charlie", "Archer", "Lucas", "Ethan", "Liam", "James", "Benjamin"],
+                femaleNames: ["Olivia", "Charlotte", "Amelia", "Mia", "Isla", "Ava", "Grace", "Willow", "Ella", "Lily", "Chloe", "Sophie", "Zoe", "Matilda", "Harper"],
+                lastNames: ["Smith", "Jones", "Williams", "Brown", "Wilson", "Taylor", "Johnson", "White", "Martin", "Anderson", "Thompson", "Nguyen", "Thomas", "Walker", "Harris", "Lee", "Ryan", "Robinson", "Kelly", "King"],
+                streets: ["George Street", "Pitt Street", "Collins Street", "Bourke Street", "Queen Street", "King Street", "Elizabeth Street", "Castlereagh Street", "Macquarie Street", "Hunter Street", "Kent Street", "Sussex Street"],
+                cities: ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Newcastle", "Canberra", "Sunshine Coast", "Wollongong", "Hobart", "Geelong", "Townsville", "Cairns", "Darwin"],
+                states: ["NSW", "VIC", "QLD", "WA", "SA", "TAS", "ACT", "NT"],
+                zipFormat: () => String(randInt(1000, 9999)),
+                phoneFormat: () => `+61 ${randInt(400, 499)} ${randInt(100, 999)} ${randInt(100, 999)}`,
+                idFormat: () => `${randInt(100000000, 999999999)}`,
+                idName: "TFN",
+                coords: () => ({ lat: (-randInt(1000, 4400) / 100).toFixed(4), lng: (randInt(11300, 15400) / 100).toFixed(4) }),
+                cardBrands: ["Visa", "Mastercard", "American Express"]
+            },
+            jp: {
+                name: "Japón",
+                flag: "🇯🇵",
+                code: "JP",
+                maleNames: ["Haruto", "Yuto", "Sota", "Yuki", "Haruki", "Ryusei", "Kaito", "Asahi", "Minato", "Riku", "Takumi", "Kenji", "Hiroshi", "Akira", "Daichi"],
+                femaleNames: ["Himari", "Hina", "Yua", "Sakura", "Ichika", "Akari", "Sara", "Yui", "Aoi", "Rin", "Mei", "Koharu", "Mio", "Yuna", "Tsubaki"],
+                lastNames: ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura", "Kobayashi", "Kato", "Yoshida", "Yamada", "Sasaki", "Yamaguchi", "Matsumoto", "Inoue", "Kimura", "Hayashi", "Shimizu", "Yamashita"],
+                streets: ["Chuo-dori", "Meiji-dori", "Showa-dori", "Yasukuni-dori", "Aoyama-dori", "Omotesando", "Ginza-dori", "Shinjuku-dori", "Ikebukuro-dori", "Roppongi-dori", "Shibuya-dori", "Harajuku-dori"],
+                cities: ["Tokyo", "Yokohama", "Osaka", "Nagoya", "Sapporo", "Fukuoka", "Kobe", "Kyoto", "Kawasaki", "Saitama", "Hiroshima", "Sendai", "Kitakyushu", "Chiba", "Sakai"],
+                states: ["Tokyo", "Osaka", "Kanagawa", "Aichi", "Saitama", "Chiba", "Hyogo", "Hokkaido", "Fukuoka", "Shizuoka", "Ibaraki", "Kyoto", "Mie", "Tochigi", "Okinawa"],
+                zipFormat: () => `${randInt(100, 999)}-${randInt(1000, 9999)}`,
+                phoneFormat: () => `+81 ${randInt(70, 90)}-${randInt(1000, 9999)}-${randInt(1000, 9999)}`,
+                idFormat: () => `${randInt(1000, 9999)}-${randInt(1000, 9999)}-${randInt(1000, 9999)}`,
+                idName: "My Number",
+                coords: () => ({ lat: (randInt(3100, 4500) / 100).toFixed(4), lng: (randInt(13000, 14500) / 100).toFixed(4) }),
+                cardBrands: ["JCB", "Visa", "Mastercard", "American Express"]
+            },
+            kr: {
+                name: "Corea del Sur",
+                flag: "🇰🇷",
+                code: "KR",
+                maleNames: ["Min-jun", "Seo-jun", "Do-yun", "Ye-jun", "Si-woo", "Ha-jun", "Ju-won", "Ji-ho", "Jun-seo", "Ye-jun", "Tae-ho", "Sung-min", "Jae-hyun", "Hyun-woo", "Dong-wook"],
+                femaleNames: ["Seo-yeon", "Ji-yoo", "Ha-yoon", "Seo-yoon", "Ji-woo", "Ha-yun", "Chae-won", "Ji-yoon", "Yoo-jin", "Seo-ah", "Min-seo", "Eun-ji", "So-yeon", "Na-yeon", "Da-yeon"],
+                lastNames: ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon", "Jang", "Lim", "Han", "Oh", "Seo", "Shin", "Kwon", "Hwang", "Ahn", "Song", "Yoo", "Hong"],
+                streets: ["Gangnam-daero", "Teheran-ro", "Jongno", "Myeongdong-gil", "Hongdae-ro", "Itaewon-ro", "Apgujeong-ro", "Cheongdam-daero", "Yeouido-daero", "Seoullo 7017", "Noksapyeong-daero", "Hannam-daero"],
+                cities: ["Seoul", "Busan", "Incheon", "Daegu", "Daejeon", "Gwangju", "Suwon", "Ulsan", "Changwon", "Goyang", "Yongin", "Seongnam", "Bucheon", "Ansan", "Cheongju"],
+                states: ["Seoul", "Busan", "Incheon", "Daegu", "Gwangju", "Daejeon", "Ulsan", "Gyeonggi", "Gangwon", "Chungbuk", "Chungnam", "Jeonbuk", "Jeonnam", "Gyeongbuk", "Gyeongnam", "Jeju"],
+                zipFormat: () => String(randInt(10000, 99999)),
+                phoneFormat: () => `+82 ${randInt(10, 19)}-${randInt(1000, 9999)}-${randInt(1000, 9999)}`,
+                idFormat: () => generateKoreanRRN(),
+                idName: "RRN",
+                coords: () => ({ lat: (randInt(3300, 3800) / 100).toFixed(4), lng: (randInt(12400, 13100) / 100).toFixed(4) }),
+                cardBrands: ["BC Card", "Shinhan", "Samsung", "Visa", "Mastercard"]
+            }
+        };
+
+        // ============================================
+        // FUNCIONES AUXILIARES
+        // ============================================
+        function randInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function pick(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function pad(n, len) {
+            return String(n).padStart(len, '0');
+        }
+
+        // Algoritmo Luhn para generar tarjetas válidas
+        function generateLuhnNumber(prefix, length) {
+            let number = prefix;
+            while (number.length < length - 1) {
+                number += randInt(0, 9);
+            }
+            let sum = 0;
+            let alt = true;
+            for (let i = number.length - 1; i >= 0; i--) {
+                let n = parseInt(number[i], 10);
+                if (alt) {
+                    n *= 2;
+                    if (n > 9) n -= 9;
+                }
+                sum += n;
+                alt = !alt;
+            }
+            let checkDigit = (10 - (sum % 10)) % 10;
+            return number + checkDigit;
+        }
+
+        function generateCardNumber(brand) {
+            const prefixes = {
+                'Visa': '4',
+                'Mastercard': '5' + randInt(1, 5),
+                'American Express': '3' + pick(['4', '7']),
+                'Discover': '6011',
+                'Maestro': '5' + randInt(0, 9),
+                'JCB': '35',
+                'Elo': '636368',
+                'Hipercard': '606282',
+                'Naranja': '589562',
+                'Cabal': '603522',
+                'Magna': '500',
+                'Carte Bleue': '4',
+                'Girocard': '4',
+                'Bancomat': '4',
+                'Postepay': '4',
+                'Interac': '4',
+                'BC Card': '4',
+                'Shinhan': '4',
+                'Samsung': '4'
+            };
+            const length = brand === 'American Express' ? 15 : 16;
+            const prefix = prefixes[brand] || '4';
+            return generateLuhnNumber(prefix, length);
+        }
+
+        function generateExpiry() {
+            const year = randInt(2026, 2031);
+            const month = randInt(1, 12);
+            return `${pad(month, 2)}/${year}`;
+        }
+
+        function generateCVV(brand) {
+            const length = brand === 'American Express' ? 4 : 3;
+            let cvv = '';
+            for (let i = 0; i < length; i++) cvv += randInt(0, 9);
+            return cvv;
+        }
+
+        // Generadores de IDs nacionales
+        function generateCURP() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const vowels = 'AEIOU';
+            const consonants = 'BCDFGHJKLMNPQRSTVWXYZ';
+            let curp = '';
+            curp += pick(consonants);
+            curp += pick(vowels);
+            curp += pick(consonants);
+            curp += pick(consonants);
+            curp += pad(randInt(50, 99), 2);
+            curp += pad(randInt(1, 12), 2);
+            curp += pad(randInt(1, 28), 2);
+            curp += pick(['H', 'M']);
+            const states = ['AS', 'BC', 'BS', 'CC', 'CL', 'CM', 'CS', 'CH', 'DF', 'DG', 'GT', 'GR', 'HG', 'JC', 'MC', 'MN', 'MS', 'NT', 'NL', 'OC', 'PL', 'QT', 'QR', 'SP', 'SL', 'SR', 'TC', 'TS', 'TL', 'VZ', 'YN', 'ZS', 'NE'];
+            curp += pick(states);
+            for (let i = 0; i < 3; i++) curp += pick(consonants);
+            curp += randInt(0, 9);
+            curp += randInt(0, 9);
+            return curp;
+        }
+
+        function generateDNI() {
+            const dni = randInt(10000000, 99999999);
+            const letters = 'TRWAGMYFPDXBNJZSQVHLCKE';
+            const letter = letters[dni % 23];
+            return `${dni}${letter}`;
+        }
+
+        function generateRUT() {
+            const rut = randInt(1000000, 99999999);
+            let sum = 0;
+            let multiplier = 2;
+            let temp = rut;
+            while (temp > 0) {
+                sum += (temp % 10) * multiplier;
+                temp = Math.floor(temp / 10);
+                multiplier = multiplier === 7 ? 2 : multiplier + 1;
+            }
+            const remainder = 11 - (sum % 11);
+            let dv;
+            if (remainder === 11) dv = '0';
+            else if (remainder === 10) dv = 'K';
+            else dv = String(remainder);
+            return `${rut}-${dv}`;
+        }
+
+        function generateCPF() {
+            const n = [];
+            for (let i = 0; i < 9; i++) n.push(randInt(0, 9));
+            let sum = 0;
+            for (let i = 0; i < 9; i++) sum += n[i] * (10 - i);
+            let d1 = 11 - (sum % 11);
+            if (d1 >= 10) d1 = 0;
+            n.push(d1);
+            sum = 0;
+            for (let i = 0; i < 10; i++) sum += n[i] * (11 - i);
+            let d2 = 11 - (sum % 11);
+            if (d2 >= 10) d2 = 0;
+            n.push(d2);
+            return `${n[0]}${n[1]}${n[2]}.${n[3]}${n[4]}${n[5]}.${n[6]}${n[7]}${n[8]}-${n[9]}${n[10]}`;
+        }
+
+        function generateUKPostcode() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const area = pick(letters) + pick(letters);
+            const district = randInt(1, 99);
+            const sector = randInt(0, 9);
+            const unit = pick(letters) + pick(letters);
+            return `${area}${district} ${sector}${unit}`;
+        }
+
+        function generateNINO() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const prefix = pick(letters) + pick(letters);
+            const num = `${randInt(10, 99)} ${randInt(10, 99)} ${randInt(10, 99)}`;
+            const suffix = pick(['A', 'B', 'C', 'D']);
+            return `${prefix} ${num} ${suffix}`;
+        }
+
+        function generateFrenchSSN() {
+            const sex = randInt(1, 2);
+            const year = randInt(50, 99);
+            const month = randInt(1, 12);
+            const dept = randInt(1, 99);
+            const commune = randInt(100, 999);
+            const order = randInt(100, 999);
+            const key = randInt(1, 99);
+            return `${sex}${year}${pad(month, 2)} ${pad(dept, 2)} ${commune} ${order} ${pad(key, 2)}`;
+        }
+
+        function generateItalianCF() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let cf = '';
+            for (let i = 0; i < 6; i++) cf += pick(letters);
+            for (let i = 0; i < 2; i++) cf += randInt(0, 9);
+            cf += pick(letters);
+            for (let i = 0; i < 2; i++) cf += randInt(0, 9);
+            cf += pick(letters);
+            for (let i = 0; i < 3; i++) cf += randInt(0, 9);
+            cf += pick(letters);
+            return cf;
+        }
+
+        function generateCanadianPostal() {
+            const letters = 'ABCDEFGHJKLMNPRSTVXY';
+            const digits = '0123456789';
+            return `${pick(letters)}${pick(digits)}${pick(letters)} ${pick(digits)}${pick(letters)}${pick(digits)}`;
+        }
+
+        function generateKoreanRRN() {
+            const yy = randInt(70, 99);
+            const mm = randInt(1, 12);
+            const dd = randInt(1, 28);
+            const seq = randInt(1000000, 9999999);
+            return `${yy}${pad(mm, 2)}${pad(dd, 2)}-${seq}`;
+        }
+
+        function generateBirthday() {
+            const year = randInt(1970, 2005);
+            const month = randInt(1, 12);
+            const day = randInt(1, 28);
+            return `${pad(year, 4)}-${pad(month, 2)}-${pad(day, 2)}`;
+        }
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        let generatedCount = 0;
+        const countrySelect = document.getElementById('info-country');
+        
+        // Poblar select de países
+        Object.keys(countriesDB).forEach(code => {
+            const country = countriesDB[code];
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = `${country.flag} ${country.name} (${country.code})`;
+            countrySelect.appendChild(option);
+        });
+
+        document.getElementById('statCountries').textContent = Object.keys(countriesDB).length;
+
+        // ============================================
+        // GENERADOR PRINCIPAL
+        // ============================================
+        function generateFakeInfo() {
+            const countryCode = countrySelect.value;
+            const country = countriesDB[countryCode];
+            const genderPref = document.getElementById('info-gender').value;
+            
+            // Determinar género
+            let gender;
+            if (genderPref === 'random') {
+                gender = Math.random() > 0.5 ? 'male' : 'female';
+            } else {
+                gender = genderPref;
+            }
+            
+            const firstName = gender === 'male' ? pick(country.maleNames) : pick(country.femaleNames);
+            const lastName1 = pick(country.lastNames);
+            const lastName2 = pick(country.lastNames);
+            const fullName = `${firstName} ${lastName1} ${lastName2}`;
+            
+            const street = `${randInt(1, 9999)} ${pick(country.streets)}`;
+            const city = pick(country.cities);
+            const state = pick(country.states);
+            const zip = country.zipFormat();
+            const phone = country.phoneFormat();
+            const id = country.idFormat(gender);
+            const birthday = generateBirthday();
+            const coords = country.coords();
+            
+            // Generar tarjeta de crédito
+            const cardBrand = pick(country.cardBrands);
+            const cardNumber = generateCardNumber(cardBrand);
+            const cardExpiry = generateExpiry();
+            const cardCVV = generateCVV(cardBrand);
+            
+            // Formatear número de tarjeta con espacios
+            const formattedCard = cardBrand === 'American Express' 
+                ? `${cardNumber.slice(0, 4)} ${cardNumber.slice(4, 10)} ${cardNumber.slice(10)}`
+                : `${cardNumber.slice(0, 4)} ${cardNumber.slice(4, 8)} ${cardNumber.slice(8, 12)} ${cardNumber.slice(12)}`;
+            
+            const result = `╔══════════════════════════════════════════╗
+║  ${country.flag} ${country.name.toUpperCase().padEnd(30)} ${country.code}  ║
+╚══════════════════════════════════════════╝
+
+👤 INFORMACIÓN PERSONAL
+├─ Full Name:           ${fullName}
+├─ Gender:              ${gender === 'male' ? 'Male' : 'Female'}
+├─ Birthday:            ${birthday}
+├─ ${country.idName.padEnd(20)} ${id}
+└─ Phone Number:        ${phone}
+
+💳 TARJETA DE CRÉDITO
+├─ Brand:               ${cardBrand}
+├─ Number:              ${formattedCard}
+├─ Expire:              ${cardExpiry}
+└─ CVV:                 ${cardCVV}
+
+📍 DIRECCIÓN
+├─ Street:              ${street}
+├─ City/Town:           ${city}
+├─ State/Region:        ${state}
+├─ Zip/Postal Code:     ${zip}
+└─ Country:             ${country.name}
+
+🌐 UBICACIÓN GPS
+├─ Latitude:            ${coords.lat}
+└─ Longitude:           ${coords.lng}
+
+╔══════════════════════════════════════════╗
+║  Generado por DM Streaming               ║
+║  Sistema 100% Offline - Sin dependencias ║
+╚══════════════════════════════════════════╝`;
+
+            document.getElementById('info-result').value = result;
+            generatedCount++;
+            document.getElementById('statGenerated').textContent = generatedCount;
+        }
+
+        function copyInfo() {
+            const copyText = document.getElementById("info-result");
+            if (!copyText.value) return;
+            
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value).then(() => {
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                btn.style.borderColor = '#00ff88';
+                btn.style.color = '#00ff88';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.style.borderColor = '';
+                    btn.style.color = '';
+                }, 2000);
+            });
+        }
+
+        // Generar uno al cargar
+        window.onload = () => {
+            generateFakeInfo();
+        };
+    </script>
+</body>
+</html>
